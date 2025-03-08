@@ -1,50 +1,38 @@
-# Wordpress - ignore core, configuration, examples, uploads and logs.
-# https://github.com/github/gitignore/blob/main/WordPress.gitignore
+# Ignore node_modules, falls für Build-Prozesse verwendet
+/node_modules/
 
-# Core
-#
-# Note: if you want to stage/commit WP core files
-# you can delete this whole section/until Configuration.
-/wp-admin/
-/wp-content/index.php
-/wp-content/languages
-/wp-content/plugins/index.php
-/wp-content/themes/index.php
-/wp-includes/
-/index.php
-/license.txt
-/readme.html
-/wp-*.php
-/xmlrpc.php
+# Ignoriere Build- und Distribution-Ordner
+/dist/
+/build/
 
-# Configuration
-wp-config.php
+# Editor- und IDE-spezifische Ordner und Dateien
+.vscode/
+.idea/
 
-# Example themes
-/wp-content/themes/twenty*/
+# Betriebssystem-spezifische Dateien
+.DS_Store
+Thumbs.db
 
-# Example plugin
-/wp-content/plugins/hello.php
+# WordPress Debug-Log
+debug.log
 
-# Uploads
-/wp-content/uploads/
+# Ignore temporäre Dateien
+*.tmp
+*.temp
 
-# Log files
+# Lokale Konfigurationsdateien, falls vorhanden (z.B. für lokale Tests)
+local-config.php
+
+# Falls du Composer verwendest, kannst du eventuell vendor ausschließen
+/vendor/
+
+# Falls du Cache-Dateien oder Backup-Dateien hast
+*.bak
+*.backup
+
+# Weitere spezifische Dateien, die durch den Build-Prozess oder Plugins generiert werden
 *.log
 
-# htaccess
-/.htaccess
-
-# All plugins
-#
-# Note: If you wish to whitelist plugins,
-# uncomment the next line
-#/wp-content/plugins
-
-# All themes
-#
-# Note: If you wish to whitelist themes,
-# uncomment the next line
-#/wp-content/themes
+# Projektspezifische Dateien
 generate_project_dump.sh
 project_dump.txt

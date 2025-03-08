@@ -56,12 +56,8 @@ function sp_youtube_counter_shortcode() {
         $options['last_fetch_value'] = $subscriberCount;
         update_option( 'sp_options', $options );
     }
-    
-    // Rückgabe des (gecachedten) Wertes
-    return number_format_i18n( $subscriberCount );
+        return number_format_i18n( $subscriberCount );
 }
-
-// Registrierung des Shortcodes
 add_shortcode( 'counter_youtube', 'sp_youtube_counter_shortcode' );
 
 function sp_steam_counter_shortcode() {
@@ -114,7 +110,6 @@ add_shortcode( 'counter_steam', 'sp_steam_counter_shortcode' );
 function sp_facebook_counter_shortcode() {
     $options = get_option( 'sp_options' );
     
-    // Prüfen, ob der Facebook Counter aktiviert ist
     if ( ! isset( $options['facebook_active'] ) || $options['facebook_active'] != 1 ) {
         return 'Facebook Counter ist nicht aktiviert.';
     }
@@ -131,7 +126,6 @@ function sp_facebook_counter_shortcode() {
     $value = get_transient( $transient_key );
     
     if ( false === $value ) {
-        // Kein gültiger Cache – API-Aufruf durchführen
         $field = ($metric === 'follower') ? 'followers_count' : 'fan_count';
         $api_url = 'https://graph.facebook.com/v10.0/' . $page_id . '?fields=' . $field . '&access_token=' . $access_token;
         $response_wp = wp_remote_get( $api_url );
@@ -161,3 +155,63 @@ function sp_facebook_counter_shortcode() {
     return number_format_i18n( $value );
 }
 add_shortcode( 'counter_facebook', 'sp_facebook_counter_shortcode' );
+
+function sp_twitter_counter_shortcode() {
+    $options = get_option( 'sp_options' );
+    
+    if ( ! isset( $options['twitter_active'] ) || $options['twitter_active'] != 1 ) {
+        return 'X Follower Counter ist nicht aktiviert.';
+    }
+    
+    $username = isset( $options['twitter_username'] ) ? trim( $options['twitter_username'] ) : '';
+    $bearer_token = isset( $options['twitter_bearer_token'] ) ? trim( $options['twitter_bearer_token'] ) : '';
+    
+    if ( empty( $username ) || empty( $bearer_token ) ) {
+        return 'Twitter Benutzername oder Bearer Token nicht konfiguriert.';
+    }
+    
+    $transient_key = 'sp_twitter_counter_value';
+    $followers_count = get_transient( $transient_key );
+    
+    // Wenn kein Cache vorhanden, prüfen, ob ein API-Call möglich ist:
+    if ( false === $followers_count ) {
+        $request_data = sp_get_twitter_request_data();
+        if ( $request_data['count'] >= 25 ) {
+            return 'Anfragelimit erreicht (25/24 Stunden). Bitte warten Sie.';
+        }
+        sp_increment_twitter_request_count();
+        
+        $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
+        $args = array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $bearer_token,
+            ),
+        );
+        $response_wp = wp_remote_get( $api_url, $args );
+        
+        if ( is_wp_error( $response_wp ) ) {
+            return 'Fehler beim Abrufen der Twitter-Daten.';
+        }
+        
+        $body = wp_remote_retrieve_body( $response_wp );
+        $data = json_decode( $body, true );
+        
+        if ( ! isset( $data['data']['public_metrics']['followers_count'] ) ) {
+            return 'Keine Follower-Zahl gefunden.';
+        }
+        
+        $followers_count = $data['data']['public_metrics']['followers_count'];
+        $refresh_hours = isset($options['twitter_refresh_interval']) ? intval($options['twitter_refresh_interval']) : 12;
+        $refresh_seconds = $refresh_hours * 3600;
+        set_transient( $transient_key, $followers_count, $refresh_seconds );
+        
+        // Letzten Abruf in den Optionen speichern
+        $options['twitter_last_fetch_time'] = current_time('mysql');
+        $options['twitter_last_fetch_value'] = $followers_count;
+        update_option( 'sp_options', $options );
+    }
+    
+    return number_format_i18n( $followers_count );
+}
+add_shortcode( 'counter_x', 'sp_twitter_counter_shortcode' );
+
