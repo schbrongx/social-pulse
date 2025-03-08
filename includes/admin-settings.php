@@ -33,18 +33,17 @@ function sp_settings_page_html() {
     ?>
     <script>
     jQuery(document).ready(function($) {
+        // YouTube Test
         $('#sp-test-youtube').on('click', function() {
              $('#sp-youtube-test-result').html('Testing...');
              $.ajax({
-                 url: ajaxurl, // ajaxurl ist in WordPress-Admin bereits definiert
+                 url: ajaxurl,
                  type: 'POST',
                  dataType: 'json',
-                 data: {
-                     action: 'sp_test_youtube_api'
-                 },
+                 data: { action: 'sp_test_youtube_api' },
                  success: function(response) {
                      $('#sp-youtube-test-result').html(response.message);
-                     // Aktualisiere die Felder für den letzten Abruf
+                     // Update YouTube Abrufdaten, falls vorhanden
                      if(response.last_fetch_time) {
                          $('#sp-last-fetch-time').html(response.last_fetch_time);
                      }
@@ -54,6 +53,30 @@ function sp_settings_page_html() {
                  },
                  error: function(xhr, status, error) {
                      $('#sp-youtube-test-result').html('Error: ' + error);
+                 }
+             });
+        });
+        
+        // Steam Test
+        $('#sp-test-steam').on('click', function() {
+             $('#sp-steam-test-result').html('Testing...');
+             $.ajax({
+                 url: ajaxurl,
+                 type: 'POST',
+                 dataType: 'json',
+                 data: { action: 'sp_test_steam_api' },
+                 success: function(response) {
+                     $('#sp-steam-test-result').html(response.message);
+                     // Aktualisiere die Steam-Abrufdaten im UI
+                     if(response.last_fetch_time) {
+                         $('#sp-steam-last-fetch-time').html(response.last_fetch_time);
+                     }
+                     if(response.last_fetch_value) {
+                         $('#sp-steam-last-fetch-value').html(response.last_fetch_value);
+                     }
+                 },
+                 error: function(xhr, status, error) {
+                     $('#sp-steam-test-result').html('Error: ' + error);
                  }
              });
         });
@@ -132,6 +155,52 @@ function sp_settings_page_html() {
                         ?>
                     </td>
                 </tr>
+                <!-- Steam Counter Einstellungen -->
+                <tr valign="top">
+                    <th scope="row">Steam Counter aktivieren</th>
+                    <td>
+                        <input type="checkbox" name="sp_options[steam_active]" value="1" <?php checked( isset($options['steam_active']) ? $options['steam_active'] : 0, 1 ); ?> />
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Steam App ID</th>
+                    <td>
+                        <input type="text" name="sp_options[steam_app_id]" value="<?php echo isset($options['steam_app_id']) ? esc_attr( $options['steam_app_id'] ) : ''; ?>" size="50" />
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Steam Aktualisierungsintervall</th>
+                    <td>
+                        <select name="sp_options[steam_refresh_interval]">
+                            <?php
+                            $intervals = array(1, 2, 3, 6, 12, 24);
+                            $current_interval = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
+                            foreach($intervals as $interval) {
+                                echo '<option value="'.$interval.'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf Steam (Zeit)</th>
+                    <td id="sp-steam-last-fetch-time">
+                        <?php echo isset($options['steam_last_fetch_time']) ? esc_html($options['steam_last_fetch_time']) : 'Noch nicht abgerufen'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf Steam (Wert)</th>
+                    <td id="sp-steam-last-fetch-value">
+                        <?php echo isset($options['steam_last_fetch_value']) ? number_format_i18n($options['steam_last_fetch_value']) : 'Noch nicht abgerufen'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Test Steam API</th>
+                    <td>
+                        <button id="sp-test-steam" type="button" class="button">Test now</button>
+                        <span id="sp-steam-test-result" style="margin-left:10px;"></span>
+                    </td>
+                </tr>
                 <!-- Weitere Counter können hier analog ergänzt werden: Twitter/X, Facebook, Steam -->
             </table>
             <?php submit_button(); ?>
@@ -201,4 +270,53 @@ function sp_test_youtube_api_callback() {
 }
 add_action( 'wp_ajax_sp_test_youtube_api', 'sp_test_youtube_api_callback' );
 
-
+function sp_test_steam_api_callback() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_die('Nicht berechtigt.');
+    }
+    
+    $options = get_option( 'sp_options' );
+    $app_id = isset( $options['steam_app_id'] ) ? trim( $options['steam_app_id'] ) : '';
+    
+    if ( empty( $app_id ) ) {
+        $response = array( 'message' => 'Steam App ID fehlt.' );
+        wp_send_json($response);
+    }
+    
+    // Steam API URL: GetNumberOfCurrentPlayers
+    $api_url = add_query_arg( array( 'appid' => $app_id ), 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/' );
+    
+    $response_wp = wp_remote_get( $api_url );
+    if ( is_wp_error( $response_wp ) ) {
+         $response = array( 'message' => 'Fehler beim Abrufen der Steam-Daten.' );
+         wp_send_json( $response );
+    }
+    
+    $body = wp_remote_retrieve_body( $response_wp );
+    $data = json_decode( $body, true );
+    
+    if ( ! isset( $data['response']['player_count'] ) ) {
+         $response = array( 'message' => 'Keine Spieleranzahl gefunden.' );
+         wp_send_json( $response );
+    }
+    
+    $playerCount = $data['response']['player_count'];
+    
+    // Aktualisierungsintervall aus den Steam-Einstellungen (in Stunden, Standard 12h)
+    $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
+    $refresh_seconds = $refresh_hours * 3600;
+    set_transient( 'sp_steam_counter_value', $playerCount, $refresh_seconds );
+    
+    // Speichern des letzten Abrufs in den Optionen
+    $options['steam_last_fetch_time'] = current_time('mysql');
+    $options['steam_last_fetch_value'] = $playerCount;
+    update_option( 'sp_options', $options );
+    
+    $response = array(
+        'message'         => 'Steam Spieler: ' . number_format_i18n( $playerCount ),
+        'last_fetch_time' => $options['steam_last_fetch_time'],
+        'last_fetch_value'=> number_format_i18n( $playerCount )
+    );
+    wp_send_json( $response );
+}
+add_action( 'wp_ajax_sp_test_steam_api', 'sp_test_steam_api_callback' );

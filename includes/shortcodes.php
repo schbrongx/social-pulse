@@ -63,3 +63,50 @@ function sp_youtube_counter_shortcode() {
 
 // Registrierung des Shortcodes
 add_shortcode( 'counter_youtube', 'sp_youtube_counter_shortcode' );
+
+function sp_steam_counter_shortcode() {
+    $options = get_option( 'sp_options' );
+    
+    // Prüfen, ob der Steam Counter aktiviert ist
+    if ( ! isset( $options['steam_active'] ) || $options['steam_active'] != 1 ) {
+        return 'Steam Counter ist nicht aktiviert.';
+    }
+    
+    $app_id = isset( $options['steam_app_id'] ) ? trim( $options['steam_app_id'] ) : '';
+    if ( empty( $app_id ) ) {
+        return 'Steam App ID nicht konfiguriert.';
+    }
+    
+    $transient_key = 'sp_steam_counter_value';
+    $playerCount = get_transient( $transient_key );
+    
+    if ( false === $playerCount ) {
+        // Kein gültiger Cache vorhanden – API-Aufruf
+        $api_url = add_query_arg( array( 'appid' => $app_id ), 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/' );
+        
+        $response_wp = wp_remote_get( $api_url );
+        if ( is_wp_error( $response_wp ) ) {
+            return 'Fehler beim Abrufen der Steam-Daten.';
+        }
+        
+        $body = wp_remote_retrieve_body( $response_wp );
+        $data = json_decode( $body, true );
+        
+        if ( ! isset( $data['response']['player_count'] ) ) {
+            return 'Keine Spieleranzahl gefunden.';
+        }
+        
+        $playerCount = $data['response']['player_count'];
+        $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
+        $refresh_seconds = $refresh_hours * 3600;
+        set_transient( $transient_key, $playerCount, $refresh_seconds );
+        
+        // Letzten Abruf in den Optionen speichern
+        $options['steam_last_fetch_time'] = current_time('mysql');
+        $options['steam_last_fetch_value'] = $playerCount;
+        update_option( 'sp_options', $options );
+    }
+    
+    return number_format_i18n( $playerCount );
+}
+add_shortcode( 'counter_steam', 'sp_steam_counter_shortcode' );
