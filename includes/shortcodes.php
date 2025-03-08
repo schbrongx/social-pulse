@@ -111,55 +111,53 @@ function sp_steam_counter_shortcode() {
 }
 add_shortcode( 'counter_steam', 'sp_steam_counter_shortcode' );
 
-function sp_test_facebook_api_callback() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_die('Nicht berechtigt.');
+function sp_facebook_counter_shortcode() {
+    $options = get_option( 'sp_options' );
+    
+    // Prüfen, ob der Facebook Counter aktiviert ist
+    if ( ! isset( $options['facebook_active'] ) || $options['facebook_active'] != 1 ) {
+        return 'Facebook Counter ist nicht aktiviert.';
     }
     
-    $options = get_option( 'sp_options' );
     $page_id = isset( $options['facebook_page_id'] ) ? trim( $options['facebook_page_id'] ) : '';
     $access_token = isset( $options['facebook_access_token'] ) ? trim( $options['facebook_access_token'] ) : '';
+    $metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan'; // Standard: fan
     
     if ( empty( $page_id ) || empty( $access_token ) ) {
-        $response = array( 'message' => 'Facebook Page ID oder Access Token fehlen.' );
-        wp_send_json( $response );
+        return 'Facebook Page ID oder Access Token nicht konfiguriert.';
     }
     
-    // API-URL zusammensetzen: Wir rufen das Feld "fan_count" ab
-    $api_url = 'https://graph.facebook.com/v22.0/' . $page_id . '?fields=fan_count&access_token=' . $access_token;
-    $response_wp = wp_remote_get( $api_url );
+    $transient_key = 'sp_facebook_counter_value';
+    $value = get_transient( $transient_key );
     
-    if ( is_wp_error( $response_wp ) ) {
-         $response = array( 'message' => 'Fehler beim Abrufen der Facebook-Daten.' );
-         wp_send_json( $response );
+    if ( false === $value ) {
+        // Kein gültiger Cache – API-Aufruf durchführen
+        $field = ($metric === 'follower') ? 'followers_count' : 'fan_count';
+        $api_url = 'https://graph.facebook.com/v10.0/' . $page_id . '?fields=' . $field . '&access_token=' . $access_token;
+        $response_wp = wp_remote_get( $api_url );
+        
+        if ( is_wp_error( $response_wp ) ) {
+            return 'Fehler beim Abrufen der Facebook-Daten.';
+        }
+        
+        $body = wp_remote_retrieve_body( $response_wp );
+        $data = json_decode( $body, true );
+        
+        if ( ! isset( $data[$field] ) ) {
+            return 'Keine Fan-/Follower-Zahl gefunden.';
+        }
+        
+        $value = $data[$field];
+        $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
+        $refresh_seconds = $refresh_hours * 3600;
+        set_transient( $transient_key, $value, $refresh_seconds );
+        
+        // Letzten Abruf in den Optionen speichern
+        $options['facebook_last_fetch_time'] = current_time('mysql');
+        $options['facebook_last_fetch_value'] = $value;
+        update_option( 'sp_options', $options );
     }
     
-    $body = wp_remote_retrieve_body( $response_wp );
-    $data = json_decode( $body, true );
-    
-    if ( ! isset( $data['fan_count'] ) ) {
-         $response = array( 'message' => 'Keine Fan-Zahl gefunden.' );
-         wp_send_json( $response );
-    }
-    
-    $fan_count = $data['fan_count'];
-    
-    // Aktualisierungsintervall aus den Facebook-Einstellungen (in Stunden, Standard 12h)
-    $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
-    $refresh_seconds = $refresh_hours * 3600;
-    set_transient( 'sp_facebook_counter_value', $fan_count, $refresh_seconds );
-    
-    // Speichern des letzten Abrufs in den Optionen
-    $options['facebook_last_fetch_time'] = current_time('mysql');
-    $options['facebook_last_fetch_value'] = $fan_count;
-    update_option( 'sp_options', $options );
-    
-    $response = array(
-        'message'         => 'Facebook Fans: ' . number_format_i18n( $fan_count ),
-        'last_fetch_time' => $options['facebook_last_fetch_time'],
-        'last_fetch_value'=> number_format_i18n( $fan_count )
-    );
-    wp_send_json( $response );
+    return number_format_i18n( $value );
 }
-add_action( 'wp_ajax_sp_test_facebook_api', 'sp_test_facebook_api_callback' );
-	
+add_shortcode( 'counter_facebook', 'sp_facebook_counter_shortcode' );

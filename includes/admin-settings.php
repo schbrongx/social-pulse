@@ -257,7 +257,26 @@ jQuery(document).ready(function($) {
                         </select>
                     </td>
                 </tr>
-                <tr valign="top">
+                <!-- Facebook Metrik Auswahl -->
+               <tr valign="top">
+                   <th scope="row">Facebook Metrik</th>
+                   <td>
+                       <select name="sp_options[facebook_metric]">
+                           <?php
+                           $metrics = array(
+                               'fan'      => 'Fan (fan_count)',
+                               'follower' => 'Follower (followers_count)'
+                           );
+                           // Standardmäßig "fan"
+                           $current_metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan';
+                           foreach($metrics as $key => $label) {
+                               echo '<option value="'. esc_attr($key) .'" '. selected($current_metric, $key, false) .'>'. esc_html($label) .'</option>';
+                           }
+                           ?>
+                       </select>
+                   </td>
+               </tr>
+               <tr valign="top">
                     <th scope="row">Letzter Abruf Facebook (Zeit)</th>
                     <td id="sp-facebook-last-fetch-time">
                         <?php 
@@ -281,8 +300,7 @@ jQuery(document).ready(function($) {
                     </td>
                 </tr>
 
-                <!-- Weitere Counter können hier analog ergänzt werden: Twitter/X, Facebook, Steam -->
-            </table>
+$            </table>
             <?php submit_button(); ?>
         </form>
     </div>
@@ -400,3 +418,59 @@ function sp_test_steam_api_callback() {
     wp_send_json( $response );
 }
 add_action( 'wp_ajax_sp_test_steam_api', 'sp_test_steam_api_callback' );
+
+function sp_test_facebook_api_callback() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_die('Nicht berechtigt.');
+    }
+    
+    $options = get_option( 'sp_options' );
+    $page_id = isset( $options['facebook_page_id'] ) ? trim( $options['facebook_page_id'] ) : '';
+    $access_token = isset( $options['facebook_access_token'] ) ? trim( $options['facebook_access_token'] ) : '';
+    $metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan'; // Standard: fan
+    
+    if ( empty( $page_id ) || empty( $access_token ) ) {
+        $response = array( 'message' => 'Facebook Page ID oder Access Token fehlen.' );
+        wp_send_json( $response );
+    }
+    
+    // Wählen Sie das Feld basierend auf der Metrik-Auswahl
+    $field = ($metric === 'follower') ? 'followers_count' : 'fan_count';
+    
+    // API-URL zusammensetzen: Wir fordern das ausgewählte Feld an
+    $api_url = 'https://graph.facebook.com/v10.0/' . $page_id . '?fields=' . $field . '&access_token=' . $access_token;
+    $response_wp = wp_remote_get( $api_url );
+    
+    if ( is_wp_error( $response_wp ) ) {
+         $response = array( 'message' => 'Fehler beim Abrufen der Facebook-Daten.' );
+         wp_send_json( $response );
+    }
+    
+    $body = wp_remote_retrieve_body( $response_wp );
+    $data = json_decode( $body, true );
+    
+    if ( ! isset( $data[$field] ) ) {
+         $response = array( 'message' => 'Keine Fan-/Follower-Zahl gefunden.' );
+         wp_send_json( $response );
+    }
+    
+    $value = $data[$field];
+    
+    // Aktualisierungsintervall aus den Facebook-Einstellungen (in Stunden, Standard 12h)
+    $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
+    $refresh_seconds = $refresh_hours * 3600;
+    set_transient( 'sp_facebook_counter_value', $value, $refresh_seconds );
+    
+    // Speichern des letzten Abrufs in den Optionen
+    $options['facebook_last_fetch_time'] = current_time('mysql');
+    $options['facebook_last_fetch_value'] = $value;
+    update_option( 'sp_options', $options );
+    
+    $response = array(
+        'message'         => 'Facebook ' . ucfirst($metric) . ': ' . number_format_i18n( $value ),
+        'last_fetch_time' => $options['facebook_last_fetch_time'],
+        'last_fetch_value'=> number_format_i18n( $value )
+    );
+    wp_send_json( $response );
+}
+add_action( 'wp_ajax_sp_test_facebook_api', 'sp_test_facebook_api_callback' );
