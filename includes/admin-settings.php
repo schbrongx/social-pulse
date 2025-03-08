@@ -31,18 +31,26 @@ function sp_settings_page_html() {
     // Einstellungen abrufen
     $options = get_option( 'sp_options' );
     ?>
-	<script>
+    <script>
     jQuery(document).ready(function($) {
         $('#sp-test-youtube').on('click', function() {
              $('#sp-youtube-test-result').html('Testing...');
              $.ajax({
                  url: ajaxurl, // ajaxurl ist in WordPress-Admin bereits definiert
                  type: 'POST',
+                 dataType: 'json',
                  data: {
                      action: 'sp_test_youtube_api'
                  },
                  success: function(response) {
-                     $('#sp-youtube-test-result').html(response);
+                     $('#sp-youtube-test-result').html(response.message);
+                     // Aktualisiere die Felder für den letzten Abruf
+                     if(response.last_fetch_time) {
+                         $('#sp-last-fetch-time').html(response.last_fetch_time);
+                     }
+                     if(response.last_fetch_value) {
+                         $('#sp-last-fetch-value').html(response.last_fetch_value);
+                     }
                  },
                  error: function(xhr, status, error) {
                      $('#sp-youtube-test-result').html('Error: ' + error);
@@ -51,7 +59,6 @@ function sp_settings_page_html() {
         });
     });
     </script>
-
     <div class="wrap">
         <h1>Social Pulse Einstellungen</h1>
         <p>Diese Seite erklärt, wie Sie Social Pulse nutzen können. Aktivieren Sie die gewünschten Counter und tragen Sie ggf. notwendige API-Schlüssel bzw. IDs ein.</p>
@@ -93,6 +100,38 @@ function sp_settings_page_html() {
                         <span id="sp-youtube-test-result" style="margin-left:10px;"></span>
                     </td>
                 </tr>
+                <tr valign="top">
+                    <th scope="row">Aktualisierungsintervall</th>
+                    <td>
+                        <select name="sp_options[refresh_interval]">
+                            <?php
+                            // Mögliche Intervalle in Stunden
+                            $intervals = array(1, 2, 3, 6, 12, 24);
+                            // Standardwert 12 Stunden, falls noch nicht gesetzt
+                            $current_interval = isset($options['refresh_interval']) ? intval($options['refresh_interval']) : 12;
+                            foreach($intervals as $interval) {
+                                echo '<option value="'. $interval .'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf (Zeit)</th>
+                    <td id="sp-last-fetch-time">
+                        <?php 
+                        echo isset($options['last_fetch_time']) ? esc_html($options['last_fetch_time']) : 'Noch nicht abgerufen';
+                        ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf (Wert)</th>
+                    <td id="sp-last-fetch-value">
+                        <?php 
+                        echo isset($options['last_fetch_value']) ? number_format_i18n($options['last_fetch_value']) : 'Noch nicht abgerufen';
+                        ?>
+                    </td>
+                </tr>
                 <!-- Weitere Counter können hier analog ergänzt werden: Twitter/X, Facebook, Steam -->
             </table>
             <?php submit_button(); ?>
@@ -102,46 +141,64 @@ function sp_settings_page_html() {
 }
 
 function sp_test_youtube_api_callback() {
-    // Sicherheitsprüfung: Nur berechtigte Benutzer dürfen den Test ausführen
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Nicht berechtigt.');
     }
 
-    // Optionen abrufen
     $options = get_option( 'sp_options' );
     $api_key    = isset( $options['youtube_api_key'] ) ? trim( $options['youtube_api_key'] ) : '';
     $channel_id = isset( $options['youtube_channel_id'] ) ? trim( $options['youtube_channel_id'] ) : '';
 
     if ( empty( $api_key ) || empty( $channel_id ) ) {
-        echo 'API Key oder Channel ID fehlen.';
-        wp_die();
+        $response = array(
+            'message' => 'API Key oder Channel ID fehlen.',
+        );
+        wp_send_json( $response );
     }
 
-    // YouTube API URL zusammenbauen
     $api_url = add_query_arg( array(
          'part' => 'statistics',
          'id'   => $channel_id,
          'key'  => $api_key
     ), 'https://www.googleapis.com/youtube/v3/channels' );
 
-    // API-Aufruf (Hinweis: Für den produktiven Betrieb empfiehlt sich ein Caching der Ergebnisse)
-    $response = wp_remote_get( $api_url );
+    $response_wp = wp_remote_get( $api_url );
 
-    if ( is_wp_error( $response ) ) {
-         echo 'Fehler beim Abrufen der Daten.';
-         wp_die();
+    if ( is_wp_error( $response_wp ) ) {
+         $response = array(
+             'message' => 'Fehler beim Abrufen der Daten.',
+         );
+         wp_send_json( $response );
     }
 
-    $body = wp_remote_retrieve_body( $response );
+    $body = wp_remote_retrieve_body( $response_wp );
     $data = json_decode( $body, true );
 
     if ( ! isset( $data['items'][0]['statistics']['subscriberCount'] ) ) {
-         echo 'Keine Abonnentendaten gefunden.';
-         wp_die();
+         $response = array(
+             'message' => 'Keine Abonnentendaten gefunden.',
+         );
+         wp_send_json( $response );
     }
 
     $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
-    echo 'YouTube Abonnenten: ' . number_format_i18n( $subscriberCount );
-    wp_die();
+    
+    // Aktualisierung des Cache und der Optionswerte
+    $refresh_hours = isset($options['refresh_interval']) ? intval($options['refresh_interval']) : 12;
+    $refresh_seconds = $refresh_hours * 3600;
+    set_transient( 'sp_youtube_counter_value', $subscriberCount, $refresh_seconds );
+    $options['last_fetch_time'] = current_time('mysql');
+    $options['last_fetch_value'] = $subscriberCount;
+    update_option( 'sp_options', $options );
+    
+    // Rückgabe als JSON
+    $response = array(
+        'message'         => 'YouTube Abonnenten: ' . number_format_i18n( $subscriberCount ),
+        'last_fetch_time' => $options['last_fetch_time'],
+        'last_fetch_value'=> number_format_i18n( $subscriberCount ),
+    );
+    wp_send_json( $response );
 }
 add_action( 'wp_ajax_sp_test_youtube_api', 'sp_test_youtube_api_callback' );
+
+
