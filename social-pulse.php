@@ -17,5 +17,3 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
 
 // Shortcode für YouTube-Counter registrieren
 require_once plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php';
-
-//AIzaSyDYOOHMwzCz28u_mT0J894TcJvIxJk4XHs
