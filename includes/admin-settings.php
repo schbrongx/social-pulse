@@ -9,8 +9,8 @@ function sp_add_admin_menu() {
         'manage_options',          // Capability
         'social-counters',         // Menu slug
         'sp_settings_page_html',   // Callback function
-        'dashicons-chart-bar',     // Icon
-        20                         // Position
+        'dashicons-chart-line',     // Icon
+        100                         // Position
     );
 }
 add_action( 'admin_menu', 'sp_add_admin_menu' );
@@ -101,25 +101,25 @@ function sp_settings_page_html() {
                  }
              });
         });
-        // Twitter Test
-        $('#sp-test-twitter').on('click', function() {
-             $('#sp-twitter-test-result').html('Testing...');
+        // X Test
+        $('#sp-test-x').on('click', function() {
+             $('#sp-x-test-result').html('Testing...');
              $.ajax({
                  url: ajaxurl,
                  type: 'POST',
                  dataType: 'json',
-                 data: { action: 'sp_test_twitter_api' },
+                 data: { action: 'sp_test_x_api' },
                  success: function(response) {
-                     $('#sp-twitter-test-result').html(response.message);
+                     $('#sp-x-test-result').html(response.message);
                      if(response.last_fetch_time) {
-                         $('#sp-twitter-last-fetch-time').html(response.last_fetch_time);
+                         $('#sp-x-last-fetch-time').html(response.last_fetch_time);
                      }
                      if(response.last_fetch_value) {
-                         $('#sp-twitter-last-fetch-value').html(response.last_fetch_value);
+                         $('#sp-x-last-fetch-value').html(response.last_fetch_value);
                      }
                  },
                  error: function(xhr, status, error) {
-                     $('#sp-twitter-test-result').html('Error: ' + error);
+                     $('#sp-x-test-result').html('Error: ' + error);
                  }
              });
         });
@@ -141,7 +141,7 @@ function sp_settings_page_html() {
             In your posts or pages use the following tags to display the corresponding social media follower counts:<br />
             - <code>[counter_youtube]</code> for YouTube subscribers<br />
             - <code>[counter_facebook]</code> for Facebook fans<br />
-            - <code>[counter_x]</code> for Twitter/X followers<br />
+            - <code>[counter_x]</code> for X followers<br />
             - <code>[counter_steam]</code> for Steam "in-game" numbers
         </p>
         <form action="options.php" method="post">
@@ -353,34 +353,34 @@ function sp_settings_page_html() {
 
 <!-- X Section -->
             <h2 class="sp-section-title">
-                <span class="fa-brands fa-x-twitter"></span> Twitter/X Settings
+                <span class="fa-brands fa-x-x"></span> X Settings
             </h2>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row">Enable Twitter/X Counter</th>
+                    <th scope="row">Enable X Counter</th>
                     <td>
-                        <input type="checkbox" name="sp_options[twitter_active]" value="1" <?php checked( isset($options['twitter_active']) ? $options['twitter_active'] : 0, 1 ); ?> />
+                        <input type="checkbox" name="sp_options[x_active]" value="1" <?php checked( isset($options['x_active']) ? $options['x_active'] : 0, 1 ); ?> />
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Twitter Username</th>
+                    <th scope="row">X Username</th>
                     <td>
-                        <input type="text" name="sp_options[twitter_username]" value="<?php echo isset($options['twitter_username']) ? esc_attr( $options['twitter_username'] ) : ''; ?>" size="50" />
+                        <input type="text" name="sp_options[x_username]" value="<?php echo isset($options['x_username']) ? esc_attr( $options['x_username'] ) : ''; ?>" size="50" />
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Twitter Bearer Token</th>
+                    <th scope="row">X Bearer Token</th>
                     <td>
-                        <input type="text" name="sp_options[twitter_bearer_token]" value="<?php echo isset($options['twitter_bearer_token']) ? esc_attr( $options['twitter_bearer_token'] ) : ''; ?>" size="50" />
+                        <input type="text" name="sp_options[x_bearer_token]" value="<?php echo isset($options['x_bearer_token']) ? esc_attr( $options['x_bearer_token'] ) : ''; ?>" size="50" />
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Twitter Refresh Interval</th>
+                    <th scope="row">X Refresh Interval</th>
                     <td>
-                        <select name="sp_options[twitter_refresh_interval]">
+                        <select name="sp_options[x_refresh_interval]">
                             <?php
                             $intervals = array(1, 2, 3, 6, 12, 24);
-                            $current_interval = isset($options['twitter_refresh_interval']) ? intval($options['twitter_refresh_interval']) : 12;
+                            $current_interval = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
                             foreach($intervals as $interval) {
                                 echo '<option value="'. $interval .'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
                             }
@@ -389,31 +389,31 @@ function sp_settings_page_html() {
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Last Fetch Twitter (Time)</th>
-                    <td id="sp-twitter-last-fetch-time">
-                        <input type="hidden" name="sp_options[twitter_last_fetch_time]" value="<?php echo isset($options['twitter_last_fetch_time']) ? esc_attr($options['twitter_last_fetch_time']) : ''; ?>" />
-                        <?php echo ( !empty($options['twitter_last_fetch_time']) ) ? esc_html($options['twitter_last_fetch_time']) : 'Not fetched yet'; ?>
+                    <th scope="row">Last Fetch X (Time)</th>
+                    <td id="sp-x-last-fetch-time">
+                        <input type="hidden" name="sp_options[x_last_fetch_time]" value="<?php echo isset($options['x_last_fetch_time']) ? esc_attr($options['x_last_fetch_time']) : ''; ?>" />
+                        <?php echo ( !empty($options['x_last_fetch_time']) ) ? esc_html($options['x_last_fetch_time']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Last Fetch Twitter (Value)</th>
-                    <td id="sp-twitter-last-fetch-value">
-                        <input type="hidden" name="sp_options[twitter_last_fetch_value]" value="<?php echo isset($options['twitter_last_fetch_value']) ? esc_attr($options['twitter_last_fetch_value']) : ''; ?>" />
-                        <?php echo ( isset($options['twitter_last_fetch_value']) && is_numeric($options['twitter_last_fetch_value']) ) ? number_format_i18n($options['twitter_last_fetch_value']) : 'Not fetched yet'; ?>
+                    <th scope="row">Last Fetch X (Value)</th>
+                    <td id="sp-x-last-fetch-value">
+                        <input type="hidden" name="sp_options[x_last_fetch_value]" value="<?php echo isset($options['x_last_fetch_value']) ? esc_attr($options['x_last_fetch_value']) : ''; ?>" />
+                        <?php echo ( isset($options['x_last_fetch_value']) && is_numeric($options['x_last_fetch_value']) ) ? number_format_i18n($options['x_last_fetch_value']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Test Twitter API</th>
+                    <th scope="row">Test X API</th>
                     <td>
-                        <button id="sp-test-twitter" type="button" class="button">Test now</button>
-                        <span id="sp-twitter-test-result" style="margin-left:10px;"></span>
+                        <button id="sp-test-x" type="button" class="button">Test now</button>
+                        <span id="sp-x-test-result" style="margin-left:10px;"></span>
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row">Twitter API Limit</th>
+                    <th scope="row">X API Limit</th>
                     <td>
                         <?php 
-                        $request_data = sp_get_twitter_request_data();
+                        $request_data = sp_get_x_request_data();
                         echo 'Limit: 25 requests per 24 hours. Current: ' . intval($request_data['count']) . ' requests.';
                         ?>
                     </td>
@@ -596,32 +596,32 @@ function sp_test_facebook_api_callback() {
 }
 add_action( 'wp_ajax_sp_test_facebook_api', 'sp_test_facebook_api_callback' );
 
-// AJAX callback for testing the Twitter API
-function sp_test_twitter_api_callback() {
+// AJAX callback for testing the X API
+function sp_test_x_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
     
     $options = get_option( 'sp_options' );
-    $username = isset( $options['twitter_username'] ) ? trim( $options['twitter_username'] ) : '';
-    $bearer_token = isset( $options['twitter_bearer_token'] ) ? trim( $options['twitter_bearer_token'] ) : '';
+    $username = isset( $options['x_username'] ) ? trim( $options['x_username'] ) : '';
+    $bearer_token = isset( $options['x_bearer_token'] ) ? trim( $options['x_bearer_token'] ) : '';
     
     if ( empty( $username ) || empty( $bearer_token ) ) {
-        $response = array( 'message' => 'Twitter username or Bearer Token is missing.' );
+        $response = array( 'message' => 'X username or Bearer Token is missing.' );
         wp_send_json( $response );
     }
     
     // New limit: 25 requests per 24 hours
-    $request_data = sp_get_twitter_request_data();
+    $request_data = sp_get_x_request_data();
     if ( $request_data['count'] >= 25 ) {
         $response = array( 'message' => 'Request limit reached (25/24 hours). Please wait.' );
         wp_send_json( $response );
     }
     
-    sp_increment_twitter_request_count();
+    sp_increment_x_request_count();
     
-    // Twitter API call
-    $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
+    // X API call
+    $api_url = 'https://api.x.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
         'headers' => array(
             'Authorization' => 'Bearer ' . $bearer_token,
@@ -630,7 +630,7 @@ function sp_test_twitter_api_callback() {
     $response_wp = wp_remote_get( $api_url, $args );
     
     if ( is_wp_error( $response_wp ) ) {
-        $response = array( 'message' => 'Error fetching Twitter data.' );
+        $response = array( 'message' => 'Error fetching X data.' );
         wp_send_json( $response );
     }
     
@@ -643,28 +643,28 @@ function sp_test_twitter_api_callback() {
     }
     
     $followers_count = $data['data']['public_metrics']['followers_count'];
-    $refresh_hours = isset($options['twitter_refresh_interval']) ? intval($options['twitter_refresh_interval']) : 12;
+    $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
     $refresh_seconds = $refresh_hours * 3600;
-    set_transient( 'sp_twitter_counter_value', $followers_count, $refresh_seconds );
+    set_transient( 'sp_x_counter_value', $followers_count, $refresh_seconds );
     
     // Save the last fetch time and value in options
-    $options['twitter_last_fetch_time'] = current_time('mysql');
-    $options['twitter_last_fetch_value'] = $followers_count;
+    $options['x_last_fetch_time'] = current_time('mysql');
+    $options['x_last_fetch_value'] = $followers_count;
     update_option( 'sp_options', $options );
     
     $response = array(
-        'message'         => 'Twitter/X Followers: ' . number_format_i18n( $followers_count ),
-        'last_fetch_time' => $options['twitter_last_fetch_time'],
+        'message'         => 'X Followers: ' . number_format_i18n( $followers_count ),
+        'last_fetch_time' => $options['x_last_fetch_time'],
         'last_fetch_value'=> number_format_i18n( $followers_count )
     );
     wp_send_json( $response );
 }
-add_action( 'wp_ajax_sp_test_twitter_api', 'sp_test_twitter_api_callback' );
+add_action( 'wp_ajax_sp_test_x_api', 'sp_test_x_api_callback' );
 
-function sp_get_twitter_request_data() {
+function sp_get_x_request_data() {
     // New time window: 24 hours (86,400 seconds)
     $window = 24 * 3600;
-    $data = get_transient('sp_twitter_api_requests');
+    $data = get_transient('sp_x_api_requests');
 
     // If no transient exists or the window has expired:
     if ( false === $data || ( time() - $data['start_time'] ) >= $window ) {
@@ -672,18 +672,18 @@ function sp_get_twitter_request_data() {
             'count'      => 0,
             'start_time' => time()
         );
-        set_transient('sp_twitter_api_requests', $data, $window);
+        set_transient('sp_x_api_requests', $data, $window);
     }
     return $data;
 }
 
-function sp_increment_twitter_request_count() {
-    $data = sp_get_twitter_request_data();
+function sp_increment_x_request_count() {
+    $data = sp_get_x_request_data();
     $data['count']++;
     // Calculate remaining lifetime of the window
     $window = 24 * 3600;
     $remaining = $window - (time() - $data['start_time']);
-    set_transient('sp_twitter_api_requests', $data, $remaining);
+    set_transient('sp_x_api_requests', $data, $remaining);
 }
 
 function sp_enqueue_fontawesome() {

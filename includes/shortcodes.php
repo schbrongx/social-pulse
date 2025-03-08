@@ -156,32 +156,32 @@ function sp_facebook_counter_shortcode() {
 }
 add_shortcode( 'counter_facebook', 'sp_facebook_counter_shortcode' );
 
-function sp_twitter_counter_shortcode() {
+function sp_x_counter_shortcode() {
     $options = get_option( 'sp_options' );
     
-    if ( ! isset( $options['twitter_active'] ) || $options['twitter_active'] != 1 ) {
+    if ( ! isset( $options['x_active'] ) || $options['x_active'] != 1 ) {
         return 'X Follower Counter ist nicht aktiviert.';
     }
     
-    $username = isset( $options['twitter_username'] ) ? trim( $options['twitter_username'] ) : '';
-    $bearer_token = isset( $options['twitter_bearer_token'] ) ? trim( $options['twitter_bearer_token'] ) : '';
+    $username = isset( $options['x_username'] ) ? trim( $options['x_username'] ) : '';
+    $bearer_token = isset( $options['x_bearer_token'] ) ? trim( $options['x_bearer_token'] ) : '';
     
     if ( empty( $username ) || empty( $bearer_token ) ) {
-        return 'Twitter Benutzername oder Bearer Token nicht konfiguriert.';
+        return 'X Benutzername oder Bearer Token nicht konfiguriert.';
     }
     
-    $transient_key = 'sp_twitter_counter_value';
+    $transient_key = 'sp_x_counter_value';
     $followers_count = get_transient( $transient_key );
     
     // Wenn kein Cache vorhanden, prüfen, ob ein API-Call möglich ist:
     if ( false === $followers_count ) {
-        $request_data = sp_get_twitter_request_data();
+        $request_data = sp_get_x_request_data();
         if ( $request_data['count'] >= 25 ) {
             return 'Anfragelimit erreicht (25/24 Stunden). Bitte warten Sie.';
         }
-        sp_increment_twitter_request_count();
+        sp_increment_x_request_count();
         
-        $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
+        $api_url = 'https://api.x.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
         $args = array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $bearer_token,
@@ -190,7 +190,7 @@ function sp_twitter_counter_shortcode() {
         $response_wp = wp_remote_get( $api_url, $args );
         
         if ( is_wp_error( $response_wp ) ) {
-            return 'Fehler beim Abrufen der Twitter-Daten.';
+            return 'Fehler beim Abrufen der X-Daten.';
         }
         
         $body = wp_remote_retrieve_body( $response_wp );
@@ -201,17 +201,17 @@ function sp_twitter_counter_shortcode() {
         }
         
         $followers_count = $data['data']['public_metrics']['followers_count'];
-        $refresh_hours = isset($options['twitter_refresh_interval']) ? intval($options['twitter_refresh_interval']) : 12;
+        $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
         $refresh_seconds = $refresh_hours * 3600;
         set_transient( $transient_key, $followers_count, $refresh_seconds );
         
         // Letzten Abruf in den Optionen speichern
-        $options['twitter_last_fetch_time'] = current_time('mysql');
-        $options['twitter_last_fetch_value'] = $followers_count;
+        $options['x_last_fetch_time'] = current_time('mysql');
+        $options['x_last_fetch_value'] = $followers_count;
         update_option( 'sp_options', $options );
     }
     
     return number_format_i18n( $followers_count );
 }
-add_shortcode( 'counter_x', 'sp_twitter_counter_shortcode' );
+add_shortcode( 'counter_x', 'sp_x_counter_shortcode' );
 
