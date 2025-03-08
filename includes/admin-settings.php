@@ -31,57 +31,79 @@ function sp_settings_page_html() {
     // Einstellungen abrufen
     $options = get_option( 'sp_options' );
     ?>
-    <script>
-    jQuery(document).ready(function($) {
-        // YouTube Test
-        $('#sp-test-youtube').on('click', function() {
-             $('#sp-youtube-test-result').html('Testing...');
-             $.ajax({
-                 url: ajaxurl,
-                 type: 'POST',
-                 dataType: 'json',
-                 data: { action: 'sp_test_youtube_api' },
-                 success: function(response) {
-                     $('#sp-youtube-test-result').html(response.message);
-                     // Update YouTube Abrufdaten, falls vorhanden
-                     if(response.last_fetch_time) {
-                         $('#sp-last-fetch-time').html(response.last_fetch_time);
-                     }
-                     if(response.last_fetch_value) {
-                         $('#sp-last-fetch-value').html(response.last_fetch_value);
-                     }
-                 },
-                 error: function(xhr, status, error) {
-                     $('#sp-youtube-test-result').html('Error: ' + error);
+<script>
+jQuery(document).ready(function($) {
+    // YouTube Test (bereits vorhanden)
+    $('#sp-test-youtube').on('click', function() {
+         $('#sp-youtube-test-result').html('Testing...');
+         $.ajax({
+             url: ajaxurl,
+             type: 'POST',
+             dataType: 'json',
+             data: { action: 'sp_test_youtube_api' },
+             success: function(response) {
+                 $('#sp-youtube-test-result').html(response.message);
+                 if(response.last_fetch_time) {
+                     $('#sp-last-fetch-time').html(response.last_fetch_time);
                  }
-             });
-        });
-        
-        // Steam Test
-        $('#sp-test-steam').on('click', function() {
-             $('#sp-steam-test-result').html('Testing...');
-             $.ajax({
-                 url: ajaxurl,
-                 type: 'POST',
-                 dataType: 'json',
-                 data: { action: 'sp_test_steam_api' },
-                 success: function(response) {
-                     $('#sp-steam-test-result').html(response.message);
-                     // Aktualisiere die Steam-Abrufdaten im UI
-                     if(response.last_fetch_time) {
-                         $('#sp-steam-last-fetch-time').html(response.last_fetch_time);
-                     }
-                     if(response.last_fetch_value) {
-                         $('#sp-steam-last-fetch-value').html(response.last_fetch_value);
-                     }
-                 },
-                 error: function(xhr, status, error) {
-                     $('#sp-steam-test-result').html('Error: ' + error);
+                 if(response.last_fetch_value) {
+                     $('#sp-last-fetch-value').html(response.last_fetch_value);
                  }
-             });
-        });
+             },
+             error: function(xhr, status, error) {
+                 $('#sp-youtube-test-result').html('Error: ' + error);
+             }
+         });
     });
-    </script>
+    
+    // Steam Test (bereits vorhanden)
+    $('#sp-test-steam').on('click', function() {
+         $('#sp-steam-test-result').html('Testing...');
+         $.ajax({
+             url: ajaxurl,
+             type: 'POST',
+             dataType: 'json',
+             data: { action: 'sp_test_steam_api' },
+             success: function(response) {
+                 $('#sp-steam-test-result').html(response.message);
+                 if(response.last_fetch_time) {
+                     $('#sp-steam-last-fetch-time').html(response.last_fetch_time);
+                 }
+                 if(response.last_fetch_value) {
+                     $('#sp-steam-last-fetch-value').html(response.last_fetch_value);
+                 }
+             },
+             error: function(xhr, status, error) {
+                 $('#sp-steam-test-result').html('Error: ' + error);
+             }
+         });
+    });
+
+    // Facebook Test
+    $('#sp-test-facebook').on('click', function() {
+         $('#sp-facebook-test-result').html('Testing...');
+         $.ajax({
+             url: ajaxurl,
+             type: 'POST',
+             dataType: 'json',
+             data: { action: 'sp_test_facebook_api' },
+             success: function(response) {
+                 $('#sp-facebook-test-result').html(response.message);
+                 if(response.last_fetch_time) {
+                     $('#sp-facebook-last-fetch-time').html(response.last_fetch_time);
+                 }
+                 if(response.last_fetch_value) {
+                     $('#sp-facebook-last-fetch-value').html(response.last_fetch_value);
+                 }
+             },
+             error: function(xhr, status, error) {
+                 $('#sp-facebook-test-result').html('Error: ' + error);
+             }
+         });
+    });
+});
+</script>
+
     <div class="wrap">
         <h1>Social Pulse Einstellungen</h1>
         <p>Diese Seite erklärt, wie Sie Social Pulse nutzen können. Aktivieren Sie die gewünschten Counter und tragen Sie ggf. notwendige API-Schlüssel bzw. IDs ein.</p>
@@ -201,6 +223,64 @@ function sp_settings_page_html() {
                         <span id="sp-steam-test-result" style="margin-left:10px;"></span>
                     </td>
                 </tr>
+                <!-- Facebook Fans Counter Einstellungen -->
+                <tr valign="top">
+                    <th scope="row">Facebook Counter aktivieren</th>
+                    <td>
+                        <input type="checkbox" name="sp_options[facebook_active]" value="1" <?php checked( isset($options['facebook_active']) ? $options['facebook_active'] : 0, 1 ); ?> />
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Facebook Page ID</th>
+                    <td>
+                        <input type="text" name="sp_options[facebook_page_id]" value="<?php echo isset($options['facebook_page_id']) ? esc_attr( $options['facebook_page_id'] ) : ''; ?>" size="50" />
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Facebook Access Token</th>
+                    <td>
+                        <input type="text" name="sp_options[facebook_access_token]" value="<?php echo isset($options['facebook_access_token']) ? esc_attr( $options['facebook_access_token'] ) : ''; ?>" size="50" />
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Facebook Aktualisierungsintervall</th>
+                    <td>
+                        <select name="sp_options[facebook_refresh_interval]">
+                            <?php
+                            // Mögliche Intervalle in Stunden
+                            $intervals = array(1, 2, 3, 6, 12, 24);
+                            $current_interval = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
+                            foreach($intervals as $interval) {
+                                echo '<option value="'. $interval .'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf Facebook (Zeit)</th>
+                    <td id="sp-facebook-last-fetch-time">
+                        <?php 
+                        echo isset($options['facebook_last_fetch_time']) ? esc_html($options['facebook_last_fetch_time']) : 'Noch nicht abgerufen';
+                        ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Letzter Abruf Facebook (Wert)</th>
+                    <td id="sp-facebook-last-fetch-value">
+                        <?php 
+                        echo isset($options['facebook_last_fetch_value']) ? number_format_i18n($options['facebook_last_fetch_value']) : 'Noch nicht abgerufen';
+                        ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Test Facebook API</th>
+                    <td>
+                        <button id="sp-test-facebook" type="button" class="button">Test now</button>
+                        <span id="sp-facebook-test-result" style="margin-left:10px;"></span>
+                    </td>
+                </tr>
+
                 <!-- Weitere Counter können hier analog ergänzt werden: Twitter/X, Facebook, Steam -->
             </table>
             <?php submit_button(); ?>
