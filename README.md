@@ -15,6 +15,16 @@ Social Pulse retrieves follower numbers from multiple platforms and displays the
 * [Screenshot Leader-Mode](assets/screenshot-leader-mode.png)
 * [Screenshot Follower-Mode](assets/screenshot-follower-mode.png)
 
+## Try it out!
+* Download the [ZIP](https://github.com/schbrongx/social-pulse/releases/download/v1.0/social-pulse.zip)
+* Navigate to the [Wordpress Playground](https://playground.wordpress.net/)
+* Go to the "Plugins" page
+* Click "Add New Plugin"
+* Click "Upload Plugin"
+* Select the ZIP and click "Install Now"
+* Click "Activate Plugin"
+The plugin should now be visible at the bottom of the Wordpress menu.
+
 ## Leader and Follower Mode
 * Leader Mode:
 In this mode, Social Pulse performs the actual API calls to get the latest follower counts and caches these values. The current values are also exposed at a special URL (e.g. /social-counters/values), which can be used by Follower instances.
