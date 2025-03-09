@@ -1,5 +1,14 @@
+=== Social Pulse ===
+Contributors: schbrongx
+Tags: social, followers, api, counters
+Requires at least: 5.0
+Tested up to: 6.7
+Stable tag: 1.0
+License: MIT
+License URI: https://mit-license.org/
+
 # Social Pulse
-Social Pulse is a WordPress plugin that displays follower counts for various social media platforms such as YouTube, Facebook, X, and Steam. It offers two operating modes—Leader and Follower—to help reduce the number of direct API requests and stay within API limits.
+... is a WP plugin showing follower counts from YouTube, Facebook, X, and Steam. It uses Leader/Follower modes to reduce API requests.
 
 ## General Idea
 Social Pulse retrieves follower numbers from multiple platforms and displays them via WordPress shortcodes. In Leader mode, the plugin directly makes API requests to obtain the latest values, which are then cached and exposed at a dedicated URL. In Follower mode, the plugin skips direct API calls and instead retrieves the pre-fetched data from the Leader instance.

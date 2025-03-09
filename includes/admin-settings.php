@@ -14,8 +14,47 @@ function sp_add_admin_menu() {
 }
 add_action('admin_menu', 'sp_add_admin_menu');
 
+function sp_sanitize_options( $input ) {
+    $output = array();
+
+    // mode: only allow 'leader' or 'follower', default: 'leader'
+    $output['mode'] = ( isset( $input['mode'] ) && in_array( $input['mode'], array( 'leader', 'follower' ) ) )
+        ? $input['mode']
+        : 'leader';
+
+    // make sure leader_url _is_ an URL
+    $output['leader_url'] = isset( $input['leader_url'] ) ? esc_url_raw( $input['leader_url'] ) : '';
+
+    // youtube options
+    $output['youtube_active'] = isset( $input['youtube_active'] ) && $input['youtube_active'] == 1 ? 1 : 0;
+    $output['youtube_api_key'] = isset( $input['youtube_api_key'] ) ? sanitize_text_field( $input['youtube_api_key'] ) : '';
+    $output['youtube_channel_id'] = isset( $input['youtube_channel_id'] ) ? sanitize_text_field( $input['youtube_channel_id'] ) : '';
+
+    // steam options
+    $output['steam_active'] = isset( $input['steam_active'] ) && $input['steam_active'] == 1 ? 1 : 0;
+    $output['steam_app_id'] = isset( $input['steam_app_id'] ) ? sanitize_text_field( $input['steam_app_id'] ) : '';
+    $output['steam_refresh_interval'] = isset( $input['steam_refresh_interval'] ) ? absint( $input['steam_refresh_interval'] ) : 12;
+
+    // facebook options
+    $output['facebook_active'] = isset( $input['facebook_active'] ) && $input['facebook_active'] == 1 ? 1 : 0;
+    $output['facebook_page_id'] = isset( $input['facebook_page_id'] ) ? sanitize_text_field( $input['facebook_page_id'] ) : '';
+    $output['facebook_access_token'] = isset( $input['facebook_access_token'] ) ? sanitize_text_field( $input['facebook_access_token'] ) : '';
+    $output['facebook_refresh_interval'] = isset( $input['facebook_refresh_interval'] ) ? absint( $input['facebook_refresh_interval'] ) : 12;
+    $output['facebook_metric'] = ( isset( $input['facebook_metric'] ) && in_array( $input['facebook_metric'], array( 'fan', 'follower' ) ) )
+        ? $input['facebook_metric']
+        : 'fan';
+
+    // X options
+    $output['x_active'] = isset( $input['x_active'] ) && $input['x_active'] == 1 ? 1 : 0;
+    $output['x_username'] = isset( $input['x_username'] ) ? sanitize_text_field( $input['x_username'] ) : '';
+    $output['x_bearer_token'] = isset( $input['x_bearer_token'] ) ? sanitize_text_field( $input['x_bearer_token'] ) : '';
+    $output['x_refresh_interval'] = isset( $input['x_refresh_interval'] ) ? absint( $input['x_refresh_interval'] ) : 12;
+
+    return $output;
+}
+
 function sp_register_settings() {
-    register_setting( 'sp_settings_group', 'sp_options' );
+    register_setting( 'sp_settings_group', 'sp_options', 'sp_sanitize_options' );
 }
 add_action( 'admin_init', 'sp_register_settings' );
 
@@ -175,12 +214,12 @@ function sp_settings_page_html() {
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
                             foreach($intervals as $interval) {
-                                echo '<option value="'.$interval.'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                                echo '<option value="'.esc_attr($interval).'" '. selected($current_interval, $interval, false) .'>'.esc_attr($interval).'h</option>';
                             }
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[steam_refresh_interval]" value="<?php echo $current_interval; ?>" />
+                            <input type="hidden" name="sp_options[steam_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -236,12 +275,12 @@ function sp_settings_page_html() {
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
                             foreach($intervals as $interval) {
-                                echo '<option value="'.$interval.'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                                echo '<option value="'.esc_attr($interval).'" '. selected($current_interval, $interval, false) .'>'.esc_attr($interval).'h</option>';
                             }
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_refresh_interval]" value="<?php echo $current_interval; ?>" />
+                            <input type="hidden" name="sp_options[facebook_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -317,12 +356,12 @@ function sp_settings_page_html() {
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
                             foreach($intervals as $interval) {
-                                echo '<option value="'.$interval.'" '. selected($current_interval, $interval, false) .'>'.$interval.'h</option>';
+                                echo '<option value="'.esc_attr($interval).'" '. selected($current_interval, $interval, false) .'>'.esc_attr($interval).'h</option>';
                             }
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[x_refresh_interval]" value="<?php echo $current_interval; ?>" />
+                            <input type="hidden" name="sp_options[x_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
