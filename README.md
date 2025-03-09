@@ -3,6 +3,8 @@ Social Pulse is a WordPress plugin that displays follower counts for various soc
 
 ## General Idea
 Social Pulse retrieves follower numbers from multiple platforms and displays them via WordPress shortcodes. In Leader mode, the plugin directly makes API requests to obtain the latest values, which are then cached and exposed at a dedicated URL. In Follower mode, the plugin skips direct API calls and instead retrieves the pre-fetched data from the Leader instance.
+* [Screenshot Leader-Mode](assets/screenshot-leader-mode.png)
+* [Screenshot Follower-Mode](assets/screenshot-follower-mode.png)
 
 ## Leader and Follower Mode
 * Leader Mode:
