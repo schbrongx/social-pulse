@@ -33,7 +33,12 @@ function sp_settings_page_html() {
     ?>
     <script>
     jQuery(document).ready(function($) {
-        // YouTube API test
+        // When any input/select/textarea changes, show the "Settings changed" message next to all test buttons.
+        $('form').on('change', 'input, select, textarea', function() {
+            $('.settings-changed').show();
+        });
+        
+        // Existing AJAX code for testing APIs remains unchanged:
         $('#sp-test-youtube').on('click', function() {
              $('#sp-youtube-test-result').html('Testing...');
              $.ajax({
@@ -56,7 +61,6 @@ function sp_settings_page_html() {
              });
         });
         
-        // Steam API test
         $('#sp-test-steam').on('click', function() {
              $('#sp-steam-test-result').html('Testing...');
              $.ajax({
@@ -78,8 +82,7 @@ function sp_settings_page_html() {
                  }
              });
         });
-    
-        // Facebook API test
+        
         $('#sp-test-facebook').on('click', function() {
              $('#sp-facebook-test-result').html('Testing...');
              $.ajax({
@@ -101,7 +104,7 @@ function sp_settings_page_html() {
                  }
              });
         });
-        // X API test
+        
         $('#sp-test-x').on('click', function() {
              $('#sp-x-test-result').html('Testing...');
              $.ajax({
@@ -176,6 +179,7 @@ function sp_settings_page_html() {
                     <td>
                         <button id="sp-test-youtube" type="button" class="button">Test now</button>
                         <span id="sp-youtube-test-result" style="margin-left:10px;"></span>
+                        <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
                 <tr valign="top">
@@ -258,6 +262,7 @@ function sp_settings_page_html() {
                     <td>
                         <button id="sp-test-steam" type="button" class="button">Test now</button>
                         <span id="sp-steam-test-result" style="margin-left:10px;"></span>
+                        <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
             </table>
@@ -336,6 +341,7 @@ function sp_settings_page_html() {
                     <td>
                         <button id="sp-test-facebook" type="button" class="button">Test now</button>
                         <span id="sp-facebook-test-result" style="margin-left:10px;"></span>
+                        <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
                <!-- Help text for long-lived token -->
@@ -407,6 +413,7 @@ function sp_settings_page_html() {
                     <td>
                         <button id="sp-test-x" type="button" class="button">Test now</button>
                         <span id="sp-x-test-result" style="margin-left:10px;"></span>
+                        <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
                 <tr valign="top">
