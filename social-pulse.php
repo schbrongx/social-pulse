@@ -9,11 +9,17 @@ Author URI: https://thomaspesendorfer.ch
 License: MIT
 */
 
-// Verhindern, dass direkt auf die Datei zugegriffen wird
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Einstellungen laden und Admin-Menü hinzufügen
+// load settings and add settings page to the wordpress menu
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
 
-// Shortcode für YouTube-Counter registrieren
+// leader mode functions
+require_once plugin_dir_path( __FILE__ ) . 'includes/leader-mode.php';
+
+// follower mode functions
+require_once plugin_dir_path( __FILE__ ) . 'includes/follower-mode.php';
+
+// register shortcodes for the social counters
 require_once plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php';
+
