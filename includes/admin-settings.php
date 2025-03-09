@@ -6,34 +6,34 @@ function sp_add_admin_menu() {
     add_menu_page(
         'Social Pulse Settings',   // Page title
         'Social Pulse',            // Menu text
-        'manage_options',          // Capability
+        'manage_options',          // Capability required
         'social-counters',         // Menu slug
-        'sp_settings_page_html',   // Callback function
-        'dashicons-chart-line',     // Icon
-        100                         // Position
+        'sp_settings_page_html',   // Callback function to output the settings page
+        'dashicons-chart-line',    // Icon
+        100                        // Position in menu
     );
 }
 add_action( 'admin_menu', 'sp_add_admin_menu' );
 
-// Register the settings
+// Register settings group and options
 function sp_register_settings() {
     register_setting( 'sp_settings_group', 'sp_options' );
 }
 add_action( 'admin_init', 'sp_register_settings' );
 
-// Callback function for the settings page
+// Callback function to output the settings page HTML
 function sp_settings_page_html() {
-    // Check if the user has sufficient rights
+    // Check user permissions
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
     }
 
-    // Retrieve settings
+    // Retrieve saved options
     $options = get_option( 'sp_options' );
     ?>
     <script>
     jQuery(document).ready(function($) {
-        // YouTube Test
+        // YouTube API test
         $('#sp-test-youtube').on('click', function() {
              $('#sp-youtube-test-result').html('Testing...');
              $.ajax({
@@ -56,7 +56,7 @@ function sp_settings_page_html() {
              });
         });
         
-        // Steam Test
+        // Steam API test
         $('#sp-test-steam').on('click', function() {
              $('#sp-steam-test-result').html('Testing...');
              $.ajax({
@@ -79,7 +79,7 @@ function sp_settings_page_html() {
              });
         });
     
-        // Facebook Test
+        // Facebook API test
         $('#sp-test-facebook').on('click', function() {
              $('#sp-facebook-test-result').html('Testing...');
              $.ajax({
@@ -101,7 +101,7 @@ function sp_settings_page_html() {
                  }
              });
         });
-        // X Test
+        // X API test
         $('#sp-test-x').on('click', function() {
              $('#sp-x-test-result').html('Testing...');
              $.ajax({
@@ -138,11 +138,11 @@ function sp_settings_page_html() {
         <p>This page explains how to use Social Pulse. Enable the desired counters and enter the necessary API keys or IDs.</p>
         <p>
             <strong>Usage of Shortcodes:</strong><br />
-            In your posts or pages use the following tags to display the corresponding social media follower counts:<br />
+            In your posts or pages, use the following tags to display the corresponding social media follower counts:<br />
             - <code>[counter_youtube]</code> for YouTube subscribers<br />
             - <code>[counter_facebook]</code> for Facebook fans<br />
             - <code>[counter_x]</code> for X followers<br />
-            - <code>[counter_steam]</code> for Steam "in-game" numbers
+            - <code>[counter_steam]</code> for Steam in-game player counts
         </p>
         <form action="options.php" method="post">
             <?php settings_fields( 'sp_settings_group' ); ?>
@@ -353,7 +353,7 @@ function sp_settings_page_html() {
 
 <!-- X Section -->
             <h2 class="sp-section-title">
-                <span class="fa-brands fa-x-x"></span> X Settings
+                <span class="fa-brands fa-x-twitter"></span> X Settings
             </h2>
             <table class="form-table">
                 <tr valign="top">
@@ -442,6 +442,7 @@ function sp_test_youtube_api_callback() {
         wp_send_json( $response );
     }
 
+    // Build YouTube API URL to retrieve channel statistics
     $api_url = add_query_arg( array(
          'part' => 'statistics',
          'id'   => $channel_id,
@@ -469,7 +470,7 @@ function sp_test_youtube_api_callback() {
 
     $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
     
-    // Update the cache and options values
+    // Cache the result and update options with last fetch time/value
     $refresh_hours = isset($options['refresh_interval']) ? intval($options['refresh_interval']) : 12;
     $refresh_seconds = $refresh_hours * 3600;
     set_transient( 'sp_youtube_counter_value', $subscriberCount, $refresh_seconds );
@@ -477,7 +478,7 @@ function sp_test_youtube_api_callback() {
     $options['last_fetch_value'] = $subscriberCount;
     update_option( 'sp_options', $options );
     
-    // Return as JSON
+    // Return JSON response
     $response = array(
         'message'         => 'YouTube Subscribers: ' . number_format_i18n( $subscriberCount ),
         'last_fetch_time' => $options['last_fetch_time'],
@@ -501,7 +502,7 @@ function sp_test_steam_api_callback() {
         wp_send_json($response);
     }
     
-    // Steam API URL: GetNumberOfCurrentPlayers
+    // Build Steam API URL to get current player count
     $api_url = add_query_arg( array( 'appid' => $app_id ), 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/' );
     
     $response_wp = wp_remote_get( $api_url );
@@ -520,12 +521,11 @@ function sp_test_steam_api_callback() {
     
     $playerCount = $data['response']['player_count'];
     
-    // Refresh interval from Steam settings (in hours, default 12h)
+    // Cache the player count and update options with last fetch time/value
     $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
     $refresh_seconds = $refresh_hours * 3600;
     set_transient( 'sp_steam_counter_value', $playerCount, $refresh_seconds );
     
-    // Save the last fetch time and value in options
     $options['steam_last_fetch_time'] = current_time('mysql');
     $options['steam_last_fetch_value'] = $playerCount;
     update_option( 'sp_options', $options );
@@ -548,17 +548,17 @@ function sp_test_facebook_api_callback() {
     $options = get_option( 'sp_options' );
     $page_id = isset( $options['facebook_page_id'] ) ? trim( $options['facebook_page_id'] ) : '';
     $access_token = isset( $options['facebook_access_token'] ) ? trim( $options['facebook_access_token'] ) : '';
-    $metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan'; // Default: fan
+    $metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan'; // default: fan
     
     if ( empty( $page_id ) || empty( $access_token ) ) {
         $response = array( 'message' => 'Facebook Page ID or Access Token is missing.' );
         wp_send_json( $response );
     }
     
-    // Choose the field based on metric selection
+    // Determine which field to request based on selected metric
     $field = ($metric === 'follower') ? 'followers_count' : 'fan_count';
     
-    // Assemble API URL: Request the selected field
+    // Build Facebook API URL to request the selected field
     $api_url = 'https://graph.facebook.com/v22.0/' . $page_id . '?fields=' . $field . '&access_token=' . $access_token;
     $response_wp = wp_remote_get( $api_url );
     
@@ -577,12 +577,11 @@ function sp_test_facebook_api_callback() {
     
     $value = $data[$field];
     
-    // Refresh interval from Facebook settings (in hours, default 12h)
+    // Cache the value and update options with last fetch time/value
     $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
     $refresh_seconds = $refresh_hours * 3600;
     set_transient( 'sp_facebook_counter_value', $value, $refresh_seconds );
     
-    // Save the last fetch time and value in options
     $options['facebook_last_fetch_time'] = current_time('mysql');
     $options['facebook_last_fetch_value'] = $value;
     update_option( 'sp_options', $options );
@@ -611,16 +610,16 @@ function sp_test_x_api_callback() {
         wp_send_json( $response );
     }
     
-    // New limit: 25 requests per 24 hours
+    // Enforce new rate limit: 25 requests per 24 hours
     $request_data = sp_get_x_request_data();
     if ( $request_data['count'] >= 25 ) {
-        $response = array( 'message' => 'Request limit reached (25/24 hours). Please wait.' );
+        $response = array( 'message' => 'Request limit reached (25 per 24 hours). Please wait.' );
         wp_send_json( $response );
     }
     
     sp_increment_x_request_count();
     
-    // X API call
+    // Build X API URL to retrieve public metrics for the username
     $api_url = 'https://api.x.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
         'headers' => array(
@@ -647,7 +646,6 @@ function sp_test_x_api_callback() {
     $refresh_seconds = $refresh_hours * 3600;
     set_transient( 'sp_x_counter_value', $followers_count, $refresh_seconds );
     
-    // Save the last fetch time and value in options
     $options['x_last_fetch_time'] = current_time('mysql');
     $options['x_last_fetch_value'] = $followers_count;
     update_option( 'sp_options', $options );
@@ -661,12 +659,12 @@ function sp_test_x_api_callback() {
 }
 add_action( 'wp_ajax_sp_test_x_api', 'sp_test_x_api_callback' );
 
+// Function to retrieve X API request data and enforce a 24-hour time window
 function sp_get_x_request_data() {
-    // New time window: 24 hours (86,400 seconds)
-    $window = 24 * 3600;
+    $window = 24 * 3600; // 24 hours in seconds
     $data = get_transient('sp_x_api_requests');
 
-    // If no transient exists or the window has expired:
+    // If no data exists or the time window has expired, initialize new data
     if ( false === $data || ( time() - $data['start_time'] ) >= $window ) {
         $data = array(
             'count'      => 0,
@@ -677,15 +675,16 @@ function sp_get_x_request_data() {
     return $data;
 }
 
+// Function to increment the X API request count within the 24-hour window
 function sp_increment_x_request_count() {
     $data = sp_get_x_request_data();
     $data['count']++;
-    // Calculate remaining lifetime of the window
     $window = 24 * 3600;
     $remaining = $window - (time() - $data['start_time']);
     set_transient('sp_x_api_requests', $data, $remaining);
 }
 
+// Enqueue Font Awesome for the admin area
 function sp_enqueue_fontawesome() {
     wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css' );
 }
