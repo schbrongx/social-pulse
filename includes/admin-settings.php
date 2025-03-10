@@ -30,11 +30,15 @@ function sp_sanitize_options( $input ) {
     $output['youtube_api_key'] = isset( $input['youtube_api_key'] ) ? sanitize_text_field( $input['youtube_api_key'] ) : '';
     $output['youtube_channel_id'] = isset( $input['youtube_channel_id'] ) ? sanitize_text_field( $input['youtube_channel_id'] ) : '';
     $output['youtube_refresh_interval'] = isset( $input['youtube_refresh_interval'] ) ? absint( $input['youtube_refresh_interval'] ) : 12;
+    $output['last_fetch_time'] = isset($input['last_fetch_time']) ? sanitize_text_field($input['last_fetch_time']) : '';
+    $output['last_fetch_value'] = isset($input['last_fetch_value']) ? sanitize_text_field($input['last_fetch_value']) : '';
 
     // steam options
     $output['steam_active'] = isset( $input['steam_active'] ) && $input['steam_active'] == 1 ? 1 : 0;
     $output['steam_app_id'] = isset( $input['steam_app_id'] ) ? sanitize_text_field( $input['steam_app_id'] ) : '';
     $output['steam_refresh_interval'] = isset( $input['steam_refresh_interval'] ) ? absint( $input['steam_refresh_interval'] ) : 12;
+    $output['steam_last_fetch_time'] = isset($input['steam_last_fetch_time']) ? sanitize_text_field($input['steam_last_fetch_time']) : '';
+    $output['steam_last_fetch_value'] = isset($input['steam_last_fetch_value']) ? sanitize_text_field($input['steam_last_fetch_value']) : '';
 
     // facebook options
     $output['facebook_active'] = isset( $input['facebook_active'] ) && $input['facebook_active'] == 1 ? 1 : 0;
@@ -44,12 +48,16 @@ function sp_sanitize_options( $input ) {
     $output['facebook_metric'] = ( isset( $input['facebook_metric'] ) && in_array( $input['facebook_metric'], array( 'fan', 'follower' ) ) )
         ? $input['facebook_metric']
         : 'fan';
+    $output['facebook_last_fetch_time'] = isset($input['facebook_last_fetch_time']) ? sanitize_text_field($input['facebook_last_fetch_time']) : '';
+    $output['facebook_last_fetch_value'] = isset($input['facebook_last_fetch_value']) ? sanitize_text_field($input['facebook_last_fetch_value']) : '';
 
     // X options
     $output['x_active'] = isset( $input['x_active'] ) && $input['x_active'] == 1 ? 1 : 0;
     $output['x_username'] = isset( $input['x_username'] ) ? sanitize_text_field( $input['x_username'] ) : '';
     $output['x_bearer_token'] = isset( $input['x_bearer_token'] ) ? sanitize_text_field( $input['x_bearer_token'] ) : '';
     $output['x_refresh_interval'] = isset( $input['x_refresh_interval'] ) ? absint( $input['x_refresh_interval'] ) : 12;
+    $output['x_last_fetch_time'] = isset($input['x_last_fetch_time']) ? sanitize_text_field($input['x_last_fetch_time']) : '';
+    $output['x_last_fetch_value'] = isset($input['x_last_fetch_value']) ? sanitize_text_field($input['x_last_fetch_value']) : '';
 
     return $output;
 }
@@ -101,8 +109,7 @@ function sp_settings_page_html() {
         <form action="options.php" method="post">
             <?php settings_fields('sp_settings_group'); ?>
             <?php do_settings_sections('sp_settings_group'); ?>
-
-            <!-- Plugin Mode Section -->
+<!-- Plugin Mode Section -->
             <h2 class="sp-section-title">Plugin Mode</h2>
             <table class="form-table">
                 <tr valign="top">
@@ -138,8 +145,7 @@ function sp_settings_page_html() {
                 <?php endif; ?>
             </table>
             <?php submit_button(); ?>
-
-            <!-- YouTube Section -->
+<!-- YouTube Section -->
             <h2 class="sp-section-title">
               <svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.3-23.7-24.8-42.3-48.3-48.6C458.8 64 288 64 288 64S117.2 64 74.6 75.5c-23.5 6.3-42 24.9-48.3 48.6-11.4 42.9-11.4 132.3-11.4 132.3s0 89.4 11.4 132.3c6.3 23.7 24.8 41.5 48.3 47.8C117.2 448 288 448 288 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zm-317.5 213.5V175.2l142.7 81.2-142.7 81.2z"/></svg>				</span>
 			  YouTube Settings
@@ -197,10 +203,24 @@ function sp_settings_page_html() {
                         <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch (Time)</th>
+                    <td id="sp-last-fetch-time">
+                        <input type="hidden" name="sp_options[last_fetch_time]" value="<?php echo isset($options['last_fetch_time']) ? esc_attr($options['last_fetch_time']) : ''; ?>" />
+                        <?php echo ( !empty($options['last_fetch_time']) ) ? esc_html($options['last_fetch_time']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch (Value)</th>
+                    <td id="sp-last-fetch-value">
+                        <input type="hidden" name="sp_options[last_fetch_value]" value="<?php echo isset($options['last_fetch_value']) ? esc_attr($options['last_fetch_value']) : ''; ?>" />
+                        <?php echo ( isset($options['last_fetch_value']) && is_numeric($options['last_fetch_value']) ) ? number_format_i18n($options['last_fetch_value']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
             </table>
             <?php submit_button(); ?>
 
-            <!-- Steam Section -->
+<!-- Steam Section -->
             <h2 class="sp-section-title">
                 <svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 496 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M496 256c0 137-111.2 248-248.4 248-113.8 0-209.6-76.3-239-180.4l95.2 39.3c6.4 32.1 34.9 56.4 68.9 56.4 39.2 0 71.9-32.4 70.2-73.5l84.5-60.2c52.1 1.3 95.8-40.9 95.8-93.5 0-51.6-42-93.5-93.7-93.5s-93.7 42-93.7 93.5v1.2L176.6 279c-15.5-.9-30.7 3.4-43.5 12.1L0 236.1C10.2 108.4 117.1 8 247.6 8 384.8 8 496 119 496 256zM155.7 384.3l-30.5-12.6a52.8 52.8 0 0 0 27.2 25.8c26.9 11.2 57.8-1.6 69-28.4 5.4-13 5.5-27.3 .1-40.3-5.4-13-15.5-23.2-28.5-28.6-12.9-5.4-26.7-5.2-38.9-.6l31.5 13c19.8 8.2 29.2 30.9 20.9 50.7-8.3 19.9-31 29.2-50.8 21zm173.8-129.9c-34.4 0-62.4-28-62.4-62.3s28-62.3 62.4-62.3 62.4 28 62.4 62.3-27.9 62.3-62.4 62.3zm.1-15.6c25.9 0 46.9-21 46.9-46.8 0-25.9-21-46.8-46.9-46.8s-46.9 21-46.9 46.8c.1 25.8 21.1 46.8 46.9 46.8z"/></svg>
 				Steam Settings
@@ -249,10 +269,23 @@ function sp_settings_page_html() {
                         <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch Steam (Time)</th>
+                    <td id="sp-steam-last-fetch-time">
+                        <input type="hidden" name="sp_options[steam_last_fetch_time]" value="<?php echo isset($options['steam_last_fetch_time']) ? esc_attr($options['steam_last_fetch_time']) : ''; ?>" />
+                        <?php echo ( !empty($options['steam_last_fetch_time']) ) ? esc_html($options['steam_last_fetch_time']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch Steam (Value)</th>
+                    <td id="sp-steam-last-fetch-value">
+                        <input type="hidden" name="sp_options[steam_last_fetch_value]" value="<?php echo isset($options['steam_last_fetch_value']) ? esc_attr($options['steam_last_fetch_value']) : ''; ?>" />
+                        <?php echo ( isset($options['steam_last_fetch_value']) && is_numeric($options['steam_last_fetch_value']) ) ? number_format_i18n($options['steam_last_fetch_value']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
             </table>
             <?php submit_button(); ?>
-
-            <!-- Facebook Section -->
+<!-- Facebook Section -->
             <h2 class="sp-section-title">
                 <svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256C0 376 82.7 476.8 194.2 504.5V334.2H141.4V256h52.8V222.3c0-87.1 39.4-127.5 125-127.5c16.2 0 44.2 3.2 55.7 6.4V172c-6-.6-16.5-1-29.6-1c-42 0-58.2 15.9-58.2 57.2V256h83.6l-14.4 78.2H287V510.1C413.8 494.8 512 386.9 512 256h0z"/></svg>
 				Facebook Settings
@@ -330,10 +363,23 @@ function sp_settings_page_html() {
                         <span class="settings-changed" style="color:red; margin-left:10px; display:none;">Settings changed, save before testing.</span>
                     </td>
                 </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch Facebook (Time)</th>
+                    <td id="sp-facebook-last-fetch-time">
+                        <input type="hidden" name="sp_options[facebook_last_fetch_time]" value="<?php echo isset($options['facebook_last_fetch_time']) ? esc_attr($options['facebook_last_fetch_time']) : ''; ?>" />
+                        <?php echo ( !empty($options['facebook_last_fetch_time']) ) ? esc_html($options['facebook_last_fetch_time']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch Facebook (Value)</th>
+                    <td id="sp-facebook-last-fetch-value">
+                        <input type="hidden" name="sp_options[facebook_last_fetch_value]" value="<?php echo isset($options['facebook_last_fetch_value']) ? esc_attr($options['facebook_last_fetch_value']) : ''; ?>" />
+                        <?php echo ( isset($options['facebook_last_fetch_value']) && is_numeric($options['facebook_last_fetch_value']) ) ? number_format_i18n($options['facebook_last_fetch_value']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
             </table>
             <?php submit_button(); ?>
-
-            <!-- X Section -->
+<!-- X Section -->
             <h2 class="sp-section-title">
                 <svg xmlns="http://www.w3.org/2000/svg" height="18" width="18" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm297.1 84L257.3 234.6 379.4 396H283.8L209 298.1 123.3 396H75.8l111-126.9L69.7 116h98l67.7 89.5L313.6 116h47.5zM323.3 367.6L153.4 142.9H125.1L296.9 367.6h26.3z"/></svg>
 				X Settings
@@ -392,12 +438,24 @@ function sp_settings_page_html() {
                     </td>
                 </tr>
                 <tr valign="top">
+                    <th scope="row">Last Fetch X (Time)</th>
+                    <td id="sp-x-last-fetch-time">
+                        <input type="hidden" name="sp_options[x_last_fetch_time]" value="<?php echo isset($options['x_last_fetch_time']) ? esc_attr($options['x_last_fetch_time']) : ''; ?>" />
+                        <?php echo ( !empty($options['x_last_fetch_time']) ) ? esc_html($options['x_last_fetch_time']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Last Fetch X (Value)</th>
+                    <td id="sp-x-last-fetch-value">
+                        <input type="hidden" name="sp_options[x_last_fetch_value]" value="<?php echo isset($options['x_last_fetch_value']) ? esc_attr($options['x_last_fetch_value']) : ''; ?>" />
+                        <?php echo ( isset($options['x_last_fetch_value']) && is_numeric($options['x_last_fetch_value']) ) ? number_format_i18n($options['x_last_fetch_value']) : 'Not fetched yet'; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
                     <th scope="row">X API Limit</th>
                     <td>
-                        <?php 
-                        $request_data = sp_get_x_request_data();
-                        echo 'Limit: 25 requests per 24 hours. Current: ' . intval($request_data['count']) . ' requests.';
-                        ?>
+                      <?php $request_data = sp_get_x_request_data(); ?>
+                      Limit: 25 requests per 24 hours. Current: <span id="sp-x-api-limit-count"><?php echo intval($request_data['count']); ?></span> requests.
                     </td>
                 </tr>
             </table>
@@ -504,6 +562,9 @@ function sp_settings_page_html() {
                     }
                     if(response.last_fetch_value) {
                         $('#sp-x-last-fetch-value').html(response.last_fetch_value);
+                    }
+                    if(response.api_limit_count) {
+                        $('#sp-x-api-limit-count').html(response.api_limit_count);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -639,8 +700,16 @@ function sp_test_x_api_callback() {
     if ( empty($username) || empty($bearer_token) ) {
         wp_send_json(array('message'=>'X username or Bearer Token is missing.'));
     }
-    // (Rate limit logic omitted for brevity)
-    $api_url = 'https://api.x.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
+	
+    // Enforce new rate limit: 25 requests per 24 hours
+    $request_data = sp_get_x_request_data();
+    if ( $request_data['count'] >= 25 ) {
+        $response = array( 'message' => 'Request limit reached (25 per 24 hours). Please wait.' );
+        wp_send_json( $response );
+    }
+	sp_increment_x_request_count();
+
+    $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
         'headers' => array(
             'Authorization' => 'Bearer ' . $bearer_token,
@@ -652,8 +721,11 @@ function sp_test_x_api_callback() {
     }
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body,true);
+
+    error_log(print_r($data, true));
+
     if ( ! isset($data['data']['public_metrics']['followers_count']) ) {
-        wp_send_json(array('message'=>'No follower count found.'));
+        wp_send_json(array('message'=>'No follower count found.', 'api_limit_count' => sp_get_x_request_data()['count']));
     }
     $followers_count = $data['data']['public_metrics']['followers_count'];
     $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
@@ -665,7 +737,8 @@ function sp_test_x_api_callback() {
     wp_send_json(array(
         'message'         => $message,
         'last_fetch_time' => $options['x_last_fetch_time'],
-        'last_fetch_value'=> number_format_i18n($followers_count)
+        'last_fetch_value'=> number_format_i18n($followers_count),
+        'api_limit_count' => sp_get_x_request_data()['count']
     ));
 }
 add_action('wp_ajax_sp_test_x_api', 'sp_test_x_api_callback');

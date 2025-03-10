@@ -110,7 +110,7 @@ function sp_x_counter_get_value() {
         $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
         if ( empty($username) || empty($bearer_token) ) return 0;
         // (Rate limit checks omitted for brevity)
-        $api_url = 'https://api.x.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
+        $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
         $args = array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $bearer_token,
