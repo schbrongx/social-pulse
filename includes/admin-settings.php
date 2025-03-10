@@ -712,7 +712,8 @@ function sp_test_x_api_callback() {
     $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
         'headers' => array(
-            'Authorization' => 'Bearer ' . $bearer_token,
+          'Authorization' => 'Bearer ' . trim($bearer_token),
+          'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
         ),
     );
     $response = wp_remote_get($api_url, $args);
@@ -722,6 +723,8 @@ function sp_test_x_api_callback() {
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body,true);
 
+    error_log(print_r($api_url, true));
+	error_log(print_r($args, true));
     error_log(print_r($data, true));
 
     if ( ! isset($data['data']['public_metrics']['followers_count']) ) {
