@@ -52,7 +52,7 @@ function sp_youtube_counter_get_value() {
         $data = json_decode($body,true);
         if ( ! isset($data['items'][0]['statistics']['subscriberCount']) ) return 0;
         $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
-        $refresh_hours = isset($options['refresh_interval']) ? intval($options['refresh_interval']) : 12;
+        $refresh_hours = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
         set_transient($transient_key, $subscriberCount, $refresh_hours * 3600);
     }
     return number_format_i18n($subscriberCount);

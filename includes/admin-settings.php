@@ -29,6 +29,7 @@ function sp_sanitize_options( $input ) {
     $output['youtube_active'] = isset( $input['youtube_active'] ) && $input['youtube_active'] == 1 ? 1 : 0;
     $output['youtube_api_key'] = isset( $input['youtube_api_key'] ) ? sanitize_text_field( $input['youtube_api_key'] ) : '';
     $output['youtube_channel_id'] = isset( $input['youtube_channel_id'] ) ? sanitize_text_field( $input['youtube_channel_id'] ) : '';
+    $output['youtube_refresh_interval'] = isset( $input['youtube_refresh_interval'] ) ? absint( $input['youtube_refresh_interval'] ) : 12;
 
     // steam options
     $output['steam_active'] = isset( $input['steam_active'] ) && $input['steam_active'] == 1 ? 1 : 0;
@@ -168,6 +169,23 @@ function sp_settings_page_html() {
                         <input type="text" name="sp_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
                             <input type="hidden" name="sp_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" />
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Youtube Refresh Interval</th>
+                    <td>
+                        <select name="sp_options[youtube_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                            <?php
+                            $intervals = array(1, 2, 3, 6, 12, 24);
+                            $current_interval = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
+                            foreach($intervals as $interval) {
+                                echo '<option value="'.esc_attr($interval).'" '. selected($current_interval, $interval, false) .'>'.esc_attr($interval).'h</option>';
+                            }
+                            ?>
+                        </select>
+                        <?php if ($mode === 'follower'): ?>
+                            <input type="hidden" name="sp_options[youtube_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -526,7 +544,7 @@ function sp_test_youtube_api_callback() {
         wp_send_json(array('message'=>'No subscriber data found.'));
     }
     $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
-    $refresh_hours = isset($options['refresh_interval']) ? intval($options['refresh_interval']) : 12;
+    $refresh_hours = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
     set_transient('sp_youtube_counter_value', $subscriberCount, $refresh_hours * 3600);
     $options['last_fetch_time'] = current_time('mysql');
     $options['last_fetch_value'] = $subscriberCount;
