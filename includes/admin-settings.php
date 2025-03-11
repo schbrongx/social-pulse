@@ -694,9 +694,11 @@ function sp_test_x_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
+	
     $options = get_option('sp_options');
     $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
     $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
+	
     if ( empty($username) || empty($bearer_token) ) {
         wp_send_json(array('message'=>'X username or Bearer Token is missing.'));
     }
@@ -717,7 +719,6 @@ function sp_test_x_api_callback() {
           'Content-Type'  => 'application/json',
           'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
         ),
-        'sslverify' => false
     );
 
 	add_filter('https_ssl_verify', '__return_false');
@@ -753,6 +754,7 @@ function sp_test_x_api_callback() {
 	}
 }
 add_action('wp_ajax_sp_test_x_api', 'sp_test_x_api_callback');
+
 
 // Helper functions for X rate limiting
 function sp_get_x_request_data() {
