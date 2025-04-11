@@ -54,7 +54,7 @@ function sp_sanitize_options( $input ) {
     // X options
     $output['x_active'] = isset( $input['x_active'] ) && $input['x_active'] == 1 ? 1 : 0;
     $output['x_username'] = isset( $input['x_username'] ) ? sanitize_text_field( $input['x_username'] ) : '';
-    $output['x_bearer_token'] = isset( $input['x_bearer_token'] ) ? sanitize_text_field( $input['x_bearer_token'] ) : '';
+    $output['x_bearer_token'] = isset( $input['x_bearer_token'] ) ? trim( $input['x_bearer_token'] ) : '';
     $output['x_refresh_interval'] = isset( $input['x_refresh_interval'] ) ? absint( $input['x_refresh_interval'] ) : 12;
     $output['x_last_fetch_time'] = isset($input['x_last_fetch_time']) ? sanitize_text_field($input['x_last_fetch_time']) : '';
     $output['x_last_fetch_value'] = isset($input['x_last_fetch_value']) ? sanitize_text_field($input['x_last_fetch_value']) : '';
@@ -455,7 +455,7 @@ function sp_settings_page_html() {
                     <th scope="row">X API Limit</th>
                     <td>
                       <?php $request_data = sp_get_x_request_data(); ?>
-                      Limit: 25 requests per 24 hours. Current: <span id="sp-x-api-limit-count"><?php echo intval($request_data['count']); ?></span> requests.
+                      Limit: 3 requests per 15 minutes. Current: <span id="sp-x-api-limit-count"><?php echo intval($request_data['count']); ?></span> requests.
                     </td>
                 </tr>
             </table>
@@ -695,54 +695,64 @@ function sp_test_x_api_callback() {
         wp_die('Not allowed.');
     }
     $options = get_option('sp_options');
-    $username = isset($options['x_username']) ? trim($options['x_username']) : '';
+    $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
     $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
     if ( empty($username) || empty($bearer_token) ) {
         wp_send_json(array('message'=>'X username or Bearer Token is missing.'));
     }
 	
-    // Enforce new rate limit: 25 requests per 24 hours
+    // Enforce new rate limit: 3 requests per 15 minutes
     $request_data = sp_get_x_request_data();
-    if ( $request_data['count'] >= 25 ) {
-        $response = array( 'message' => 'Request limit reached (25 per 24 hours). Please wait.' );
+    if ( $request_data['count'] >= 3 ) {
+        $response = array( 'message' => 'Request limit reached (3 per 15 minutes). Please wait.' );
         wp_send_json( $response );
     }
 	sp_increment_x_request_count();
 
     $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
+        'httpversion' => '1.1',
+        'blocking' => true,
         'headers' => array(
-          'Authorization' => 'Bearer ' . trim($bearer_token),
-          'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
+          'Authorization' => 'Bearer ' . $bearer_token,
+          'Content-Type'  => 'application/json',
+		  'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
         ),
     );
-    $response = wp_remote_get($api_url, $args);
-    if ( is_wp_error($response) ) {
+
+	add_filter('https_ssl_verify', '__return_false');
+
+	$response = wp_remote_get($api_url, $args);
+
+	if ( is_wp_error($response) ) {
         wp_send_json(array('message'=>'Error fetching X data.'));
     }
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body,true);
+	else {
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body);
+        error_log(print_r($api_url, true));
+	    error_log(print_r($args, true));
+        error_log(print_r($data, true));
 
-    error_log(print_r($api_url, true));
-	error_log(print_r($args, true));
-    error_log(print_r($data, true));
-
-    if ( ! isset($data['data']['public_metrics']['followers_count']) ) {
-        wp_send_json(array('message'=>'No follower count found.', 'api_limit_count' => sp_get_x_request_data()['count']));
-    }
-    $followers_count = $data['data']['public_metrics']['followers_count'];
-    $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
-    set_transient('sp_x_counter_value', $followers_count, $refresh_hours * 3600);
-    $options['x_last_fetch_time'] = current_time('mysql');
-    $options['x_last_fetch_value'] = $followers_count;
-    update_option('sp_options',$options);
-    $message = 'X Followers: ' . number_format_i18n($followers_count);
-    wp_send_json(array(
-        'message'         => $message,
-        'last_fetch_time' => $options['x_last_fetch_time'],
-        'last_fetch_value'=> number_format_i18n($followers_count),
-        'api_limit_count' => sp_get_x_request_data()['count']
-    ));
+        if ( ! isset($data->data->public_metrics->followers_count)) {
+            wp_send_json(array('message'=>'No follower count found.'.json_encode($data).$api_url.$args[headers][Authorization], 'api_limit_count' => sp_get_x_request_data()['count']));
+        }
+		else {
+            $followers_count = $data->data->public_metrics->followers_count;
+            $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
+            set_transient('sp_x_counter_value', $followers_count, $refresh_hours * 3600);
+            $options['x_last_fetch_time'] = current_time('mysql');
+            $options['x_last_fetch_value'] = $followers_count;
+            update_option('sp_options',$options);
+            $message = 'X Followers: ' . number_format_i18n($followers_count);
+            wp_send_json(array(
+                'message'         => $message,
+                'last_fetch_time' => $options['x_last_fetch_time'],
+                'last_fetch_value'=> number_format_i18n($followers_count),
+                'api_limit_count' => sp_get_x_request_data()['count']
+            ));
+		}
+	}
 }
 add_action('wp_ajax_sp_test_x_api', 'sp_test_x_api_callback');
 
@@ -762,9 +772,8 @@ function sp_get_x_request_data() {
 function sp_increment_x_request_count() {
     $data = sp_get_x_request_data();
     $data['count']++;
-    $window = 24 * 3600;
+    $window = 15 * 60;
     $remaining = $window - (time() - $data['start_time']);
     set_transient('sp_x_api_requests', $data, $remaining);
 }
-
 ?>
