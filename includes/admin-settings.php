@@ -214,7 +214,7 @@ function sp_settings_page_html() {
                     <th scope="row">Last Fetch (Value)</th>
                     <td id="sp-last-fetch-value">
                         <input type="hidden" name="sp_options[last_fetch_value]" value="<?php echo isset($options['last_fetch_value']) ? esc_attr($options['last_fetch_value']) : ''; ?>" />
-                        <?php echo ( isset($options['last_fetch_value']) && is_numeric($options['last_fetch_value']) ) ? number_format_i18n($options['last_fetch_value']) : 'Not fetched yet'; ?>
+                        <?php echo ( isset($options['last_fetch_value']) && is_numeric($options['last_fetch_value']) ) ? esc_html(number_format_i18n($options['last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
             </table>
@@ -280,7 +280,7 @@ function sp_settings_page_html() {
                     <th scope="row">Last Fetch Steam (Value)</th>
                     <td id="sp-steam-last-fetch-value">
                         <input type="hidden" name="sp_options[steam_last_fetch_value]" value="<?php echo isset($options['steam_last_fetch_value']) ? esc_attr($options['steam_last_fetch_value']) : ''; ?>" />
-                        <?php echo ( isset($options['steam_last_fetch_value']) && is_numeric($options['steam_last_fetch_value']) ) ? number_format_i18n($options['steam_last_fetch_value']) : 'Not fetched yet'; ?>
+                        <?php echo ( isset($options['steam_last_fetch_value']) && is_numeric($options['steam_last_fetch_value']) ) ? esc_html(number_format_i18n($options['steam_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
             </table>
@@ -374,7 +374,7 @@ function sp_settings_page_html() {
                     <th scope="row">Last Fetch Facebook (Value)</th>
                     <td id="sp-facebook-last-fetch-value">
                         <input type="hidden" name="sp_options[facebook_last_fetch_value]" value="<?php echo isset($options['facebook_last_fetch_value']) ? esc_attr($options['facebook_last_fetch_value']) : ''; ?>" />
-                        <?php echo ( isset($options['facebook_last_fetch_value']) && is_numeric($options['facebook_last_fetch_value']) ) ? number_format_i18n($options['facebook_last_fetch_value']) : 'Not fetched yet'; ?>
+                        <?php echo ( isset($options['facebook_last_fetch_value']) && is_numeric($options['facebook_last_fetch_value']) ) ? esc_html(number_format_i18n($options['facebook_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
             </table>
@@ -448,7 +448,7 @@ function sp_settings_page_html() {
                     <th scope="row">Last Fetch X (Value)</th>
                     <td id="sp-x-last-fetch-value">
                         <input type="hidden" name="sp_options[x_last_fetch_value]" value="<?php echo isset($options['x_last_fetch_value']) ? esc_attr($options['x_last_fetch_value']) : ''; ?>" />
-                        <?php echo ( isset($options['x_last_fetch_value']) && is_numeric($options['x_last_fetch_value']) ) ? number_format_i18n($options['x_last_fetch_value']) : 'Not fetched yet'; ?>
+                        <?php echo ( isset($options['x_last_fetch_value']) && is_numeric($options['x_last_fetch_value']) ) ? esc_html(number_format_i18n($options['x_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
@@ -730,9 +730,6 @@ function sp_test_x_api_callback() {
 	else {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
-        error_log(print_r($api_url, true));
-	    error_log(print_r($args, true));
-        error_log(print_r($data, true));
 
         if ( ! isset($data->data->public_metrics->followers_count)) {
             wp_send_json(array('message'=>'No follower count found.'.json_encode($data).$api_url.$args[headers][Authorization], 'api_limit_count' => sp_get_x_request_data()['count']));
