@@ -106,24 +106,44 @@ function sp_x_counter_get_value() {
     $transient_key = 'sp_x_counter_value';
     $followers_count = get_transient($transient_key);
     if ( false === $followers_count ) {
-        $username = isset($options['x_username']) ? trim($options['x_username']) : '';
+        $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
         $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
+        
+        # if username or bearer token are missing return 0
         if ( empty($username) || empty($bearer_token) ) return 0;
-        // (Rate limit checks omitted for brevity)
+
+        // enforce API limit, see admin-settings.php function sp_test_x_api_callback()
+        $request_data = sp_get_x_request_data();
+        if ( $request_data['count'] >= 3 ) return 0;
+
         $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
         $args = array(
+            'httpversion' => '1.1',
+            'blocking' => true,
             'headers' => array(
-                'Authorization' => 'Bearer ' . $bearer_token,
+              'Authorization' => 'Bearer ' . $bearer_token,
+              'Content-Type'  => 'application/json',
+              'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
             ),
         );
+	add_filter('https_ssl_verify', '__return_false');
+
+        sp_increment_x_request_count();
         $response = wp_remote_get($api_url, $args);
+
         if ( is_wp_error($response) ) return 0;
+
         $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body,true);
-        if ( ! isset($data['data']['public_metrics']['followers_count']) ) return 0;
-        $followers_count = $data['data']['public_metrics']['followers_count'];
+        $data = json_decode($body);
+
+        if ( ! isset($data->data->public_metrics->followers_count) ) return 0;
+
+        $followers_count = $data->data->public_metrics->followers_count;
         $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
         set_transient($transient_key, $followers_count, $refresh_hours * 3600);
+        $options['x_last_fetch_time'] = current_time('mysql');
+        $options['x_last_fetch_value'] = $followers_count;
+        update_option('sp_options',$options);
     }
     return number_format_i18n($followers_count);
 }

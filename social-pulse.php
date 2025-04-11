@@ -22,6 +22,3 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/follower-mode.php';
 
 // register shortcodes for the social counters
 require_once plugin_dir_path( __FILE__ ) . 'includes/shortcodes.php';
-
-// x.com / twitter OAuth class
-require_once plugin_dir_path( __FILE__ ) . 'includes/twitter-oauth.php';

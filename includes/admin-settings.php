@@ -707,7 +707,6 @@ function sp_test_x_api_callback() {
         $response = array( 'message' => 'Request limit reached (3 per 15 minutes). Please wait.' );
         wp_send_json( $response );
     }
-	sp_increment_x_request_count();
 
     $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
     $args = array(
@@ -716,12 +715,13 @@ function sp_test_x_api_callback() {
         'headers' => array(
           'Authorization' => 'Bearer ' . $bearer_token,
           'Content-Type'  => 'application/json',
-		  'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
+          'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
         ),
     );
 
 	add_filter('https_ssl_verify', '__return_false');
 
+        sp_increment_x_request_count();
 	$response = wp_remote_get($api_url, $args);
 
 	if ( is_wp_error($response) ) {
