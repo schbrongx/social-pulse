@@ -36,3 +36,4 @@ local-config.php
 # Projektspezifische Dateien
 generate_project_dump.sh
 project_dump.txt
+*.zip
