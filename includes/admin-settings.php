@@ -189,7 +189,7 @@ function SOCPUL_settings_page_html() {
 		   </ul>
 		</p>
         <p>
-            <strong>Usage of Shortcodes in Wordpress:</strong><br />
+            <strong>Usage of Shortcodes in WordPress:</strong><br />
             In your posts or pages, use the following tags to display the corresponding social media follower counts:<br />
             - <code>[counter_youtube]</code> for YouTube subscribers<br />
             - <code>[counter_facebook]</code> for Facebook fans<br />

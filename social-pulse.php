@@ -11,7 +11,7 @@ License: MIT
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// load settings and add settings page to the wordpress menu
+// load settings and add settings page to the WordPress menu
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin-settings.php';
 
 // leader mode functions
