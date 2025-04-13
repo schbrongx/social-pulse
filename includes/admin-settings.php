@@ -1,20 +1,20 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function sp_add_admin_menu() {
+function SOCPUL_add_admin_menu() {
     add_menu_page(
         'Social Pulse Settings',   // Page title
         'Social Pulse',            // Menu text
         'manage_options',          // Capability required
         'social-counters',         // Menu slug
-        'sp_settings_page_html',   // Callback function for settings page
+        'SOCPUL_settings_page_html',   // Callback function for settings page
         'dashicons-chart-line',    // Icon
         100                        // Position in menu
     );
 }
-add_action('admin_menu', 'sp_add_admin_menu');
+add_action('admin_menu', 'SOCPUL_add_admin_menu');
 
-function sp_sanitize_options( $input ) {
+function SOCPUL_sanitize_options( $input ) {
     $output = array();
 
     // mode: only allow 'leader' or 'follower', default: 'leader'
@@ -62,13 +62,13 @@ function sp_sanitize_options( $input ) {
     return $output;
 }
 
-function sp_register_settings() {
-    register_setting( 'sp_settings_group', 'sp_options', 'sp_sanitize_options' );
+function SOCPUL_register_settings() {
+    register_setting( 'SOCPUL_settings_group', 'SOCPUL_options', 'SOCPUL_sanitize_options' );
 }
-add_action( 'admin_init', 'sp_register_settings' );
+add_action( 'admin_init', 'SOCPUL_register_settings' );
 
 // Enqueue our admin script and inline JS only on the plugin settings page.
-function sp_admin_enqueue_scripts( $hook ) {
+function SOCPUL_admin_enqueue_scripts( $hook ) {
     if ( 'toplevel_page_social-counters' !== $hook ) {
         return;
     }
@@ -96,7 +96,7 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             dataType: 'json',
-            data: { action: 'sp_test_leader_api' },
+            data: { action: 'SOCPUL_test_leader_api' },
             success: function(response) {
                 $('#sp-leader-test-result').html(response.message);
             },
@@ -113,7 +113,7 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             dataType: 'json',
-            data: { action: 'sp_test_youtube_api' },
+            data: { action: 'SOCPUL_test_youtube_api' },
             success: function(response) {
                 $('#sp-youtube-test-result').html(response.message);
                 if(response.last_fetch_time) {
@@ -136,10 +136,10 @@ JS;
     // Attach the inline script to the enqueued script handle.
     wp_add_inline_script( 'sp-admin-script', $inline_js );
 }
-add_action( 'admin_enqueue_scripts', 'sp_admin_enqueue_scripts' );
+add_action( 'admin_enqueue_scripts', 'SOCPUL_admin_enqueue_scripts' );
 
 // Online add custom CSS on admin page
-function sp_admin_enqueue_styles( $hook ) {
+function SOCPUL_admin_enqueue_styles( $hook ) {
     if ( 'toplevel_page_social-counters' !== $hook ) {
         return;
     }
@@ -164,13 +164,13 @@ function sp_admin_enqueue_styles( $hook ) {
     // Inline CSS an den obigen Handle anhängen.
     wp_add_inline_style( 'sp-admin-style', $inline_css );
 }
-add_action( 'admin_enqueue_scripts', 'sp_admin_enqueue_styles' );
+add_action( 'admin_enqueue_scripts', 'SOCPUL_admin_enqueue_styles' );
 
-function sp_settings_page_html() {
+function SOCPUL_settings_page_html() {
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
     }
-    $options = get_option('sp_options');
+    $options = get_option('SOCPUL_options');
     $mode = isset($options['mode']) ? $options['mode'] : 'leader';
     $leader_url = isset($options['leader_url']) ? $options['leader_url'] : '';
     ?>
@@ -197,8 +197,8 @@ function sp_settings_page_html() {
             - <code>[counter_steam]</code> for Steam in-game player counts
         </p>
         <form action="options.php" method="post">
-            <?php settings_fields('sp_settings_group'); ?>
-            <?php do_settings_sections('sp_settings_group'); ?>
+            <?php settings_fields('SOCPUL_settings_group'); ?>
+            <?php do_settings_sections('SOCPUL_settings_group'); ?>
 <!-- Plugin Mode Section -->
             <h2 class="sp-section-title">Plugin Mode</h2>
             <table class="form-table">
@@ -206,10 +206,10 @@ function sp_settings_page_html() {
                     <th scope="row">Select Mode</th>
                     <td>
                         <label>
-                            <input type="radio" name="sp_options[mode]" value="leader" <?php checked($mode, 'leader'); ?> /> Leader
+                            <input type="radio" name="SOCPUL_options[mode]" value="leader" <?php checked($mode, 'leader'); ?> /> Leader
                         </label>
                         <label style="margin-left:20px;">
-                            <input type="radio" name="sp_options[mode]" value="follower" <?php checked($mode, 'follower'); ?> /> Follower
+                            <input type="radio" name="SOCPUL_options[mode]" value="follower" <?php checked($mode, 'follower'); ?> /> Follower
                         </label>
                     </td>
                 </tr>
@@ -227,7 +227,7 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Leader URL</th>
                     <td>
-                        <input type="text" name="sp_options[leader_url]" value="<?php echo esc_attr($leader_url); ?>" size="60" />
+                        <input type="text" name="SOCPUL_options[leader_url]" value="<?php echo esc_attr($leader_url); ?>" size="60" />
                         <button id="sp-test-leader" type="button" class="button">Test now</button>
                         <span id="sp-leader-test-result" style="margin-left:10px;"></span>
                     </td>
@@ -244,34 +244,34 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Enable YouTube Counter</th>
                     <td>
-                        <input type="checkbox" name="sp_options[youtube_active]" value="1" <?php checked( isset($options['youtube_active']) ? $options['youtube_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="checkbox" name="SOCPUL_options[youtube_active]" value="1" <?php checked( isset($options['youtube_active']) ? $options['youtube_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[youtube_active]" value="<?php echo isset($options['youtube_active']) ? esc_attr($options['youtube_active']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[youtube_active]" value="<?php echo isset($options['youtube_active']) ? esc_attr($options['youtube_active']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">YouTube API Key</th>
                     <td>
-                        <input type="text" name="sp_options[youtube_api_key]" value="<?php echo isset($options['youtube_api_key']) ? esc_attr($options['youtube_api_key']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[youtube_api_key]" value="<?php echo isset($options['youtube_api_key']) ? esc_attr($options['youtube_api_key']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[youtube_api_key]" value="<?php echo isset($options['youtube_api_key']) ? esc_attr($options['youtube_api_key']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[youtube_api_key]" value="<?php echo isset($options['youtube_api_key']) ? esc_attr($options['youtube_api_key']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">YouTube Channel ID</th>
                     <td>
-                        <input type="text" name="sp_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[youtube_channel_id]" value="<?php echo isset($options['youtube_channel_id']) ? esc_attr($options['youtube_channel_id']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Youtube Refresh Interval</th>
                     <td>
-                        <select name="sp_options[youtube_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                        <select name="SOCPUL_options[youtube_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
                             <?php
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
@@ -281,7 +281,7 @@ function sp_settings_page_html() {
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[youtube_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
+                            <input type="hidden" name="SOCPUL_options[youtube_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -296,14 +296,14 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Last Fetch (Time)</th>
                     <td id="sp-last-fetch-time">
-                        <input type="hidden" name="sp_options[last_fetch_time]" value="<?php echo isset($options['last_fetch_time']) ? esc_attr($options['last_fetch_time']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[last_fetch_time]" value="<?php echo isset($options['last_fetch_time']) ? esc_attr($options['last_fetch_time']) : ''; ?>" />
                         <?php echo ( !empty($options['last_fetch_time']) ) ? esc_html($options['last_fetch_time']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Last Fetch (Value)</th>
                     <td id="sp-last-fetch-value">
-                        <input type="hidden" name="sp_options[last_fetch_value]" value="<?php echo isset($options['last_fetch_value']) ? esc_attr($options['last_fetch_value']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[last_fetch_value]" value="<?php echo isset($options['last_fetch_value']) ? esc_attr($options['last_fetch_value']) : ''; ?>" />
                         <?php echo ( isset($options['last_fetch_value']) && is_numeric($options['last_fetch_value']) ) ? esc_html(number_format_i18n($options['last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
@@ -319,25 +319,25 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Enable Steam Counter</th>
                     <td>
-                        <input type="checkbox" name="sp_options[steam_active]" value="1" <?php checked( isset($options['steam_active']) ? $options['steam_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="checkbox" name="SOCPUL_options[steam_active]" value="1" <?php checked( isset($options['steam_active']) ? $options['steam_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[steam_active]" value="<?php echo isset($options['steam_active']) ? esc_attr($options['steam_active']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[steam_active]" value="<?php echo isset($options['steam_active']) ? esc_attr($options['steam_active']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Steam App ID</th>
                     <td>
-                        <input type="text" name="sp_options[steam_app_id]" value="<?php echo isset($options['steam_app_id']) ? esc_attr($options['steam_app_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[steam_app_id]" value="<?php echo isset($options['steam_app_id']) ? esc_attr($options['steam_app_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[steam_app_id]" value="<?php echo isset($options['steam_app_id']) ? esc_attr($options['steam_app_id']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[steam_app_id]" value="<?php echo isset($options['steam_app_id']) ? esc_attr($options['steam_app_id']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Steam Refresh Interval</th>
                     <td>
-                        <select name="sp_options[steam_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                        <select name="SOCPUL_options[steam_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
                             <?php
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
@@ -347,7 +347,7 @@ function sp_settings_page_html() {
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[steam_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
+                            <input type="hidden" name="SOCPUL_options[steam_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -362,14 +362,14 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Last Fetch Steam (Time)</th>
                     <td id="sp-steam-last-fetch-time">
-                        <input type="hidden" name="sp_options[steam_last_fetch_time]" value="<?php echo isset($options['steam_last_fetch_time']) ? esc_attr($options['steam_last_fetch_time']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[steam_last_fetch_time]" value="<?php echo isset($options['steam_last_fetch_time']) ? esc_attr($options['steam_last_fetch_time']) : ''; ?>" />
                         <?php echo ( !empty($options['steam_last_fetch_time']) ) ? esc_html($options['steam_last_fetch_time']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Last Fetch Steam (Value)</th>
                     <td id="sp-steam-last-fetch-value">
-                        <input type="hidden" name="sp_options[steam_last_fetch_value]" value="<?php echo isset($options['steam_last_fetch_value']) ? esc_attr($options['steam_last_fetch_value']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[steam_last_fetch_value]" value="<?php echo isset($options['steam_last_fetch_value']) ? esc_attr($options['steam_last_fetch_value']) : ''; ?>" />
                         <?php echo ( isset($options['steam_last_fetch_value']) && is_numeric($options['steam_last_fetch_value']) ) ? esc_html(number_format_i18n($options['steam_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
@@ -384,34 +384,34 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Enable Facebook Counter</th>
                     <td>
-                        <input type="checkbox" name="sp_options[facebook_active]" value="1" <?php checked( isset($options['facebook_active']) ? $options['facebook_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="checkbox" name="SOCPUL_options[facebook_active]" value="1" <?php checked( isset($options['facebook_active']) ? $options['facebook_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_active]" value="<?php echo isset($options['facebook_active']) ? esc_attr($options['facebook_active']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[facebook_active]" value="<?php echo isset($options['facebook_active']) ? esc_attr($options['facebook_active']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Facebook Page ID</th>
                     <td>
-                        <input type="text" name="sp_options[facebook_page_id]" value="<?php echo isset($options['facebook_page_id']) ? esc_attr($options['facebook_page_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[facebook_page_id]" value="<?php echo isset($options['facebook_page_id']) ? esc_attr($options['facebook_page_id']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_page_id]" value="<?php echo isset($options['facebook_page_id']) ? esc_attr($options['facebook_page_id']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[facebook_page_id]" value="<?php echo isset($options['facebook_page_id']) ? esc_attr($options['facebook_page_id']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Facebook Access Token</th>
                     <td>
-                        <input type="text" name="sp_options[facebook_access_token]" value="<?php echo isset($options['facebook_access_token']) ? esc_attr($options['facebook_access_token']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[facebook_access_token]" value="<?php echo isset($options['facebook_access_token']) ? esc_attr($options['facebook_access_token']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_access_token]" value="<?php echo isset($options['facebook_access_token']) ? esc_attr($options['facebook_access_token']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[facebook_access_token]" value="<?php echo isset($options['facebook_access_token']) ? esc_attr($options['facebook_access_token']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Facebook Refresh Interval</th>
                     <td>
-                        <select name="sp_options[facebook_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                        <select name="SOCPUL_options[facebook_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
                             <?php
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
@@ -421,14 +421,14 @@ function sp_settings_page_html() {
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
+                            <input type="hidden" name="SOCPUL_options[facebook_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Facebook Metric</th>
                     <td>
-                        <select name="sp_options[facebook_metric]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                        <select name="SOCPUL_options[facebook_metric]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
                             <?php
                             $metrics = array(
                                 'fan' => 'Fan (fan_count)',
@@ -441,7 +441,7 @@ function sp_settings_page_html() {
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[facebook_metric]" value="<?php echo esc_attr($current_metric); ?>" />
+                            <input type="hidden" name="SOCPUL_options[facebook_metric]" value="<?php echo esc_attr($current_metric); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -456,14 +456,14 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Last Fetch Facebook (Time)</th>
                     <td id="sp-facebook-last-fetch-time">
-                        <input type="hidden" name="sp_options[facebook_last_fetch_time]" value="<?php echo isset($options['facebook_last_fetch_time']) ? esc_attr($options['facebook_last_fetch_time']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[facebook_last_fetch_time]" value="<?php echo isset($options['facebook_last_fetch_time']) ? esc_attr($options['facebook_last_fetch_time']) : ''; ?>" />
                         <?php echo ( !empty($options['facebook_last_fetch_time']) ) ? esc_html($options['facebook_last_fetch_time']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Last Fetch Facebook (Value)</th>
                     <td id="sp-facebook-last-fetch-value">
-                        <input type="hidden" name="sp_options[facebook_last_fetch_value]" value="<?php echo isset($options['facebook_last_fetch_value']) ? esc_attr($options['facebook_last_fetch_value']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[facebook_last_fetch_value]" value="<?php echo isset($options['facebook_last_fetch_value']) ? esc_attr($options['facebook_last_fetch_value']) : ''; ?>" />
                         <?php echo ( isset($options['facebook_last_fetch_value']) && is_numeric($options['facebook_last_fetch_value']) ) ? esc_html(number_format_i18n($options['facebook_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
@@ -478,34 +478,34 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Enable X Counter</th>
                     <td>
-                        <input type="checkbox" name="sp_options[x_active]" value="1" <?php checked( isset($options['x_active']) ? $options['x_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="checkbox" name="SOCPUL_options[x_active]" value="1" <?php checked( isset($options['x_active']) ? $options['x_active'] : 0, 1 ); ?> <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[x_active]" value="<?php echo isset($options['x_active']) ? esc_attr($options['x_active']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[x_active]" value="<?php echo isset($options['x_active']) ? esc_attr($options['x_active']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">X Username</th>
                     <td>
-                        <input type="text" name="sp_options[x_username]" value="<?php echo isset($options['x_username']) ? esc_attr($options['x_username']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[x_username]" value="<?php echo isset($options['x_username']) ? esc_attr($options['x_username']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[x_username]" value="<?php echo isset($options['x_username']) ? esc_attr($options['x_username']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[x_username]" value="<?php echo isset($options['x_username']) ? esc_attr($options['x_username']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">X Bearer Token</th>
                     <td>
-                        <input type="text" name="sp_options[x_bearer_token]" value="<?php echo isset($options['x_bearer_token']) ? esc_attr($options['x_bearer_token']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
+                        <input type="text" name="SOCPUL_options[x_bearer_token]" value="<?php echo isset($options['x_bearer_token']) ? esc_attr($options['x_bearer_token']) : ''; ?>" size="50" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?> />
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[x_bearer_token]" value="<?php echo isset($options['x_bearer_token']) ? esc_attr($options['x_bearer_token']) : ''; ?>" />
+                            <input type="hidden" name="SOCPUL_options[x_bearer_token]" value="<?php echo isset($options['x_bearer_token']) ? esc_attr($options['x_bearer_token']) : ''; ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">X Refresh Interval</th>
                     <td>
-                        <select name="sp_options[x_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
+                        <select name="SOCPUL_options[x_refresh_interval]" <?php echo ($mode === 'follower' ? 'disabled' : ''); ?>>
                             <?php
                             $intervals = array(1, 2, 3, 6, 12, 24);
                             $current_interval = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
@@ -515,7 +515,7 @@ function sp_settings_page_html() {
                             ?>
                         </select>
                         <?php if ($mode === 'follower'): ?>
-                            <input type="hidden" name="sp_options[x_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
+                            <input type="hidden" name="SOCPUL_options[x_refresh_interval]" value="<?php echo esc_attr($current_interval); ?>" />
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -530,21 +530,21 @@ function sp_settings_page_html() {
                 <tr valign="top">
                     <th scope="row">Last Fetch X (Time)</th>
                     <td id="sp-x-last-fetch-time">
-                        <input type="hidden" name="sp_options[x_last_fetch_time]" value="<?php echo isset($options['x_last_fetch_time']) ? esc_attr($options['x_last_fetch_time']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[x_last_fetch_time]" value="<?php echo isset($options['x_last_fetch_time']) ? esc_attr($options['x_last_fetch_time']) : ''; ?>" />
                         <?php echo ( !empty($options['x_last_fetch_time']) ) ? esc_html($options['x_last_fetch_time']) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">Last Fetch X (Value)</th>
                     <td id="sp-x-last-fetch-value">
-                        <input type="hidden" name="sp_options[x_last_fetch_value]" value="<?php echo isset($options['x_last_fetch_value']) ? esc_attr($options['x_last_fetch_value']) : ''; ?>" />
+                        <input type="hidden" name="SOCPUL_options[x_last_fetch_value]" value="<?php echo isset($options['x_last_fetch_value']) ? esc_attr($options['x_last_fetch_value']) : ''; ?>" />
                         <?php echo ( isset($options['x_last_fetch_value']) && is_numeric($options['x_last_fetch_value']) ) ? esc_html(number_format_i18n($options['x_last_fetch_value'])) : 'Not fetched yet'; ?>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row">X API Limit</th>
                     <td>
-                      <?php $request_data = sp_get_x_request_data(); ?>
+                      <?php $request_data = SOCPUL_get_x_request_data(); ?>
                       Limit: 3 requests per 15 minutes. Current: <span id="sp-x-api-limit-count"><?php echo intval($request_data['count']); ?></span> requests.
                     </td>
                 </tr>
@@ -558,11 +558,11 @@ function sp_settings_page_html() {
 // -----------------------------------------------------------------------------
 // AJAX Callback Functions for Testing APIs (YouTube, Steam, Facebook, X)
 // -----------------------------------------------------------------------------
-function sp_test_youtube_api_callback() {
+function SOCPUL_test_youtube_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
-    $options = get_option('sp_options');
+    $options = get_option('SOCPUL_options');
     $api_key = isset($options['youtube_api_key']) ? trim($options['youtube_api_key']) : '';
     $channel_id = isset($options['youtube_channel_id']) ? trim($options['youtube_channel_id']) : '';
     if ( empty($api_key) || empty($channel_id) ) {
@@ -584,10 +584,10 @@ function sp_test_youtube_api_callback() {
     }
     $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
     $refresh_hours = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
-    set_transient('sp_youtube_counter_value', $subscriberCount, $refresh_hours * 3600);
+    set_transient('SOCPUL_youtube_counter_value', $subscriberCount, $refresh_hours * 3600);
     $options['last_fetch_time'] = current_time('mysql');
     $options['last_fetch_value'] = $subscriberCount;
-    update_option('sp_options',$options);
+    update_option('SOCPUL_options',$options);
     $message = 'YouTube Subscribers: ' . number_format_i18n($subscriberCount);
     wp_send_json(array(
         'message'         => $message,
@@ -595,13 +595,13 @@ function sp_test_youtube_api_callback() {
         'last_fetch_value'=> number_format_i18n($subscriberCount)
     ));
 }
-add_action('wp_ajax_sp_test_youtube_api', 'sp_test_youtube_api_callback');
+add_action('wp_ajax_SOCPUL_test_youtube_api', 'SOCPUL_test_youtube_api_callback');
 
-function sp_test_steam_api_callback() {
+function SOCPUL_test_steam_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
-    $options = get_option('sp_options');
+    $options = get_option('SOCPUL_options');
     $app_id = isset($options['steam_app_id']) ? trim($options['steam_app_id']) : '';
     if ( empty($app_id) ) {
         wp_send_json(array('message'=>'Steam App ID is missing.'));
@@ -618,10 +618,10 @@ function sp_test_steam_api_callback() {
     }
     $playerCount = $data['response']['player_count'];
     $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
-    set_transient('sp_steam_counter_value', $playerCount, $refresh_hours * 3600);
+    set_transient('SOCPUL_steam_counter_value', $playerCount, $refresh_hours * 3600);
     $options['steam_last_fetch_time'] = current_time('mysql');
     $options['steam_last_fetch_value'] = $playerCount;
-    update_option('sp_options',$options);
+    update_option('SOCPUL_options',$options);
     $message = 'Steam Players: ' . number_format_i18n($playerCount);
     wp_send_json(array(
         'message'         => $message,
@@ -629,13 +629,13 @@ function sp_test_steam_api_callback() {
         'last_fetch_value'=> number_format_i18n($playerCount)
     ));
 }
-add_action('wp_ajax_sp_test_steam_api', 'sp_test_steam_api_callback');
+add_action('wp_ajax_SOCPUL_test_steam_api', 'SOCPUL_test_steam_api_callback');
 
-function sp_test_facebook_api_callback() {
+function SOCPUL_test_facebook_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
-    $options = get_option('sp_options');
+    $options = get_option('SOCPUL_options');
     $page_id = isset($options['facebook_page_id']) ? trim($options['facebook_page_id']) : '';
     $access_token = isset($options['facebook_access_token']) ? trim($options['facebook_access_token']) : '';
     $metric = isset($options['facebook_metric']) ? $options['facebook_metric'] : 'fan';
@@ -655,10 +655,10 @@ function sp_test_facebook_api_callback() {
     }
     $value = $data[$field];
     $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
-    set_transient('sp_facebook_counter_value', $value, $refresh_hours * 3600);
+    set_transient('SOCPUL_facebook_counter_value', $value, $refresh_hours * 3600);
     $options['facebook_last_fetch_time'] = current_time('mysql');
     $options['facebook_last_fetch_value'] = $value;
-    update_option('sp_options',$options);
+    update_option('SOCPUL_options',$options);
     $message = 'Facebook ' . ucfirst($metric) . ': ' . number_format_i18n($value);
     wp_send_json(array(
         'message'         => $message,
@@ -666,14 +666,14 @@ function sp_test_facebook_api_callback() {
         'last_fetch_value'=> number_format_i18n($value)
     ));
 }
-add_action('wp_ajax_sp_test_facebook_api', 'sp_test_facebook_api_callback');
+add_action('wp_ajax_SOCPUL_test_facebook_api', 'SOCPUL_test_facebook_api_callback');
 
-function sp_test_x_api_callback() {
+function SOCPUL_test_x_api_callback() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_die('Not allowed.');
     }
 	
-    $options = get_option('sp_options');
+    $options = get_option('SOCPUL_options');
     $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
     $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
 	
@@ -682,7 +682,7 @@ function sp_test_x_api_callback() {
     }
 	
     // Enforce new rate limit: 3 requests per 15 minutes
-    $request_data = sp_get_x_request_data();
+    $request_data = SOCPUL_get_x_request_data();
     if ( $request_data['count'] >= 3 ) {
         $response = array( 'message' => 'Request limit reached (3 per 15 minutes). Please wait.' );
         wp_send_json( $response );
@@ -701,7 +701,7 @@ function sp_test_x_api_callback() {
 
 	add_filter('https_ssl_verify', '__return_false');
 
-        sp_increment_x_request_count();
+        SOCPUL_increment_x_request_count();
 	$response = wp_remote_get($api_url, $args);
 
 	if ( is_wp_error($response) ) {
@@ -712,46 +712,46 @@ function sp_test_x_api_callback() {
         $data = json_decode($body);
 
         if ( ! isset($data->data->public_metrics->followers_count)) {
-            wp_send_json(array('message'=>'No follower count found.'.json_encode($data).$api_url.$args[headers][Authorization], 'api_limit_count' => sp_get_x_request_data()['count']));
+            wp_send_json(array('message'=>'No follower count found.'.json_encode($data).$api_url.$args[headers][Authorization], 'api_limit_count' => SOCPUL_get_x_request_data()['count']));
         }
 		else {
             $followers_count = $data->data->public_metrics->followers_count;
             $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
-            set_transient('sp_x_counter_value', $followers_count, $refresh_hours * 3600);
+            set_transient('SOCPUL_x_counter_value', $followers_count, $refresh_hours * 3600);
             $options['x_last_fetch_time'] = current_time('mysql');
             $options['x_last_fetch_value'] = $followers_count;
-            update_option('sp_options',$options);
+            update_option('SOCPUL_options',$options);
             $message = 'X Followers: ' . number_format_i18n($followers_count);
             wp_send_json(array(
                 'message'         => $message,
                 'last_fetch_time' => $options['x_last_fetch_time'],
                 'last_fetch_value'=> number_format_i18n($followers_count),
-                'api_limit_count' => sp_get_x_request_data()['count']
+                'api_limit_count' => SOCPUL_get_x_request_data()['count']
             ));
 		}
 	}
 }
-add_action('wp_ajax_sp_test_x_api', 'sp_test_x_api_callback');
+add_action('wp_ajax_SOCPUL_test_x_api', 'SOCPUL_test_x_api_callback');
 
 
 // Helper functions for X rate limiting
-function sp_get_x_request_data() {
+function SOCPUL_get_x_request_data() {
     $window = 24 * 3600;
-    $data = get_transient('sp_x_api_requests');
+    $data = get_transient('SOCPUL_x_api_requests');
     if ( false === $data || ( time() - $data['start_time'] ) >= $window ) {
         $data = array(
             'count'      => 0,
             'start_time' => time()
         );
-        set_transient('sp_x_api_requests', $data, $window);
+        set_transient('SOCPUL_x_api_requests', $data, $window);
     }
     return $data;
 }
-function sp_increment_x_request_count() {
-    $data = sp_get_x_request_data();
+function SOCPUL_increment_x_request_count() {
+    $data = SOCPUL_get_x_request_data();
     $data['count']++;
     $window = 15 * 60;
     $remaining = $window - (time() - $data['start_time']);
-    set_transient('sp_x_api_requests', $data, $remaining);
+    set_transient('SOCPUL_x_api_requests', $data, $remaining);
 }
 ?>

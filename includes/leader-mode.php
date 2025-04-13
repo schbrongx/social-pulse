@@ -4,38 +4,38 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // -----------------------------------------------------------------------------
 // Leader Endpoint Registration (Leader Mode exposes values at /social-counters/values)
 // -----------------------------------------------------------------------------
-function sp_register_leader_endpoint() {
-    add_rewrite_rule('^social-counters/values/?$', 'index.php?sp_leader_values=1', 'top');
+function SOCPUL_register_leader_endpoint() {
+    add_rewrite_rule('^social-counters/values/?$', 'index.php?SOCPUL_leader_values=1', 'top');
 }
-add_action('init', 'sp_register_leader_endpoint');
+add_action('init', 'SOCPUL_register_leader_endpoint');
 
-function sp_leader_query_vars( $vars ) {
-    $vars[] = 'sp_leader_values';
+function SOCPUL_leader_query_vars( $vars ) {
+    $vars[] = 'SOCPUL_leader_values';
     return $vars;
 }
-add_filter( 'query_vars', 'sp_leader_query_vars' );
+add_filter( 'query_vars', 'SOCPUL_leader_query_vars' );
 
-function sp_leader_template_redirect() {
-    if ( get_query_var('sp_leader_values') == 1 ) {
+function SOCPUL_leader_template_redirect() {
+    if ( get_query_var('SOCPUL_leader_values') == 1 ) {
         header('Content-Type: application/json');
         $values = array(
-            'youtube'  => sp_youtube_counter_get_value(),
-            'steam'    => sp_steam_counter_get_value(),
-            'facebook' => sp_facebook_counter_get_value(),
-            'x'        => sp_x_counter_get_value(),
+            'youtube'  => SOCPUL_youtube_counter_get_value(),
+            'steam'    => SOCPUL_steam_counter_get_value(),
+            'facebook' => SOCPUL_facebook_counter_get_value(),
+            'x'        => SOCPUL_x_counter_get_value(),
         );
         echo wp_json_encode($values);
         exit;
     }
 }
-add_action( 'template_redirect', 'sp_leader_template_redirect' );
+add_action( 'template_redirect', 'SOCPUL_leader_template_redirect' );
 
 // -----------------------------------------------------------------------------
 // Leader Mode - API functions (used in shortcodes when in Leader mode)
 // -----------------------------------------------------------------------------
-function sp_youtube_counter_get_value() {
-    $options = get_option('sp_options');
-    $transient_key = 'sp_youtube_counter_value';
+function SOCPUL_youtube_counter_get_value() {
+    $options = get_option('SOCPUL_options');
+    $transient_key = 'SOCPUL_youtube_counter_value';
     $subscriberCount = get_transient($transient_key);
     if ( false === $subscriberCount ) {
         $api_key    = isset($options['youtube_api_key']) ? trim($options['youtube_api_key']) : '';
@@ -58,9 +58,9 @@ function sp_youtube_counter_get_value() {
     return number_format_i18n($subscriberCount);
 }
 
-function sp_steam_counter_get_value() {
-    $options = get_option('sp_options');
-    $transient_key = 'sp_steam_counter_value';
+function SOCPUL_steam_counter_get_value() {
+    $options = get_option('SOCPUL_options');
+    $transient_key = 'SOCPUL_steam_counter_value';
     $playerCount = get_transient($transient_key);
     if ( false === $playerCount ) {
         $app_id = isset($options['steam_app_id']) ? trim($options['steam_app_id']) : '';
@@ -78,9 +78,9 @@ function sp_steam_counter_get_value() {
     return number_format_i18n($playerCount);
 }
 
-function sp_facebook_counter_get_value() {
-    $options = get_option('sp_options');
-    $transient_key = 'sp_facebook_counter_value';
+function SOCPUL_facebook_counter_get_value() {
+    $options = get_option('SOCPUL_options');
+    $transient_key = 'SOCPUL_facebook_counter_value';
     $value = get_transient($transient_key);
     if ( false === $value ) {
         $page_id = isset($options['facebook_page_id']) ? trim($options['facebook_page_id']) : '';
@@ -101,9 +101,9 @@ function sp_facebook_counter_get_value() {
     return number_format_i18n($value);
 }
 
-function sp_x_counter_get_value() {
-    $options = get_option('sp_options');
-    $transient_key = 'sp_x_counter_value';
+function SOCPUL_x_counter_get_value() {
+    $options = get_option('SOCPUL_options');
+    $transient_key = 'SOCPUL_x_counter_value';
     $followers_count = get_transient($transient_key);
     if ( false === $followers_count ) {
         $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
@@ -112,8 +112,8 @@ function sp_x_counter_get_value() {
         # if username or bearer token are missing return 0
         if ( empty($username) || empty($bearer_token) ) return 0;
 
-        // enforce API limit, see admin-settings.php function sp_test_x_api_callback()
-        $request_data = sp_get_x_request_data();
+        // enforce API limit, see admin-settings.php function SOCPUL_test_x_api_callback()
+        $request_data = SOCPUL_get_x_request_data();
         if ( $request_data['count'] >= 3 ) return 0;
 
         $api_url = 'https://api.twitter.com/2/users/by/username/' . $username . '?user.fields=public_metrics';
@@ -128,7 +128,7 @@ function sp_x_counter_get_value() {
         );
 	add_filter('https_ssl_verify', '__return_false');
 
-        sp_increment_x_request_count();
+        SOCPUL_increment_x_request_count();
         $response = wp_remote_get($api_url, $args);
 
         if ( is_wp_error($response) ) return 0;
@@ -143,7 +143,7 @@ function sp_x_counter_get_value() {
         set_transient($transient_key, $followers_count, $refresh_hours * 3600);
         $options['x_last_fetch_time'] = current_time('mysql');
         $options['x_last_fetch_value'] = $followers_count;
-        update_option('sp_options',$options);
+        update_option('SOCPUL_options',$options);
     }
     return number_format_i18n($followers_count);
 }
