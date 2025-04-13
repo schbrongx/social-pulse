@@ -77,7 +77,7 @@ function SOCPUL_admin_enqueue_scripts( $hook ) {
         'sp-admin-script', 
         plugins_url( 'js/sp-admin.js', __FILE__ ),
         array( 'jquery' ), 
-        '1.0', 
+        false, 
         true 
     );
 }
@@ -93,7 +93,7 @@ function SOCPUL_admin_enqueue_styles( $hook ) {
         'sp-admin-style', 
         plugins_url( 'css/sp-admin.css', __FILE__ ),
         array(),
-        '1.0'
+        false
     );
     
     $inline_css = "
