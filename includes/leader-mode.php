@@ -24,7 +24,7 @@ function sp_leader_template_redirect() {
             'facebook' => sp_facebook_counter_get_value(),
             'x'        => sp_x_counter_get_value(),
         );
-        echo json_encode($values);
+        echo wp_json_encode($values);
         exit;
     }
 }
