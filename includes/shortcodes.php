@@ -52,5 +52,3 @@ function SOCPUL_x_counter_shortcode() {
     }
 }
 add_shortcode('counter_x', 'SOCPUL_x_counter_shortcode');
-
-?>

@@ -47,4 +47,3 @@ function SOCPUL_test_leader_api_callback() {
     wp_send_json(array('message' => $message));
 }
 add_action('wp_ajax_SOCPUL_test_leader_api', 'SOCPUL_test_leader_api_callback');
-?>

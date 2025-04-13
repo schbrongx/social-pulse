@@ -147,5 +147,3 @@ function SOCPUL_x_counter_get_value() {
     }
     return number_format_i18n($followers_count);
 }
-
-?>
