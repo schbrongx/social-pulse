@@ -67,6 +67,105 @@ function sp_register_settings() {
 }
 add_action( 'admin_init', 'sp_register_settings' );
 
+// Enqueue our admin script and inline JS only on the plugin settings page.
+function sp_admin_enqueue_scripts( $hook ) {
+    if ( 'toplevel_page_social-counters' !== $hook ) {
+        return;
+    }
+    
+    // Enqueue a dummy external JS file
+    wp_enqueue_script( 
+        'sp-admin-script', 
+        plugins_url( 'js/sp-admin.js', __FILE__ ),
+        array( 'jquery' ), 
+        '1.0', 
+        true 
+    );
+    
+    $inline_js = <<<JS
+jQuery(document).ready(function($) {
+    // Show "Settings changed" message when any field changes.
+    $('form').on('change', 'input, select, textarea', function() {
+        $('.settings-changed').show();
+    });
+    
+    // Test Leader URL AJAX (for Follower mode)
+    $('#sp-test-leader').on('click', function() {
+        $('#sp-leader-test-result').html('Testing...');
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: { action: 'sp_test_leader_api' },
+            success: function(response) {
+                $('#sp-leader-test-result').html(response.message);
+            },
+            error: function(xhr, status, error) {
+                $('#sp-leader-test-result').html('Error: ' + error);
+            }
+        });
+    });
+    
+    // Similar AJAX calls for YouTube, Steam, Facebook, and X testing buttons:
+    $('#sp-test-youtube').on('click', function() {
+        $('#sp-youtube-test-result').html('Testing...');
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: { action: 'sp_test_youtube_api' },
+            success: function(response) {
+                $('#sp-youtube-test-result').html(response.message);
+                if(response.last_fetch_time) {
+                    $('#sp-last-fetch-time').html(response.last_fetch_time);
+                }
+                if(response.last_fetch_value) {
+                    $('#sp-last-fetch-value').html(response.last_fetch_value);
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#sp-youtube-test-result').html('Error: ' + error);
+            }
+        });
+    });
+    
+    // Add similar code for the other buttons (#sp-test-steam, #sp-test-facebook, #sp-test-x)...
+});
+JS;
+    
+    // Attach the inline script to the enqueued script handle.
+    wp_add_inline_script( 'sp-admin-script', $inline_js );
+}
+add_action( 'admin_enqueue_scripts', 'sp_admin_enqueue_scripts' );
+
+// Online add custom CSS on admin page
+function sp_admin_enqueue_styles( $hook ) {
+    if ( 'toplevel_page_social-counters' !== $hook ) {
+        return;
+    }
+    
+    wp_enqueue_style(
+        'sp-admin-style', 
+        plugins_url( 'css/sp-admin.css', __FILE__ ),
+        array(),
+        '1.0'
+    );
+    
+    $inline_css = "
+        .sp-section-title {
+            background-color: #cccccc;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    ";
+    
+    // Inline CSS an den obigen Handle anhängen.
+    wp_add_inline_style( 'sp-admin-style', $inline_css );
+}
+add_action( 'admin_enqueue_scripts', 'sp_admin_enqueue_styles' );
+
 function sp_settings_page_html() {
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
@@ -75,15 +174,6 @@ function sp_settings_page_html() {
     $mode = isset($options['mode']) ? $options['mode'] : 'leader';
     $leader_url = isset($options['leader_url']) ? $options['leader_url'] : '';
     ?>
-	<style>
-    .sp-section-title {
-        background-color: #cccccc;
-        padding: 10px;
-        border-radius: 3px;
-        margin-bottom: 10px;
-        font-weight: bold;
-    }
-    </style>
     <div class="wrap">
         <h1>Social Pulse Settings</h1>
         <p>Enable the desired counters and enter the necessary API keys or IDs. Always hit "Save Changes" before testing.</p>
@@ -462,118 +552,6 @@ function sp_settings_page_html() {
             <?php submit_button(); ?>
         </form>
     </div>
-    <script>
-    jQuery(document).ready(function($) {
-        // Show "Settings changed" message when any field changes.
-        $('form').on('change', 'input, select, textarea', function() {
-            $('.settings-changed').show();
-        });
-        // Test Leader URL AJAX (Follower mode)
-        $('#sp-test-leader').on('click', function() {
-            $('#sp-leader-test-result').html('Testing...');
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'sp_test_leader_api' },
-                success: function(response) {
-                    $('#sp-leader-test-result').html(response.message);
-                },
-                error: function(xhr, status, error) {
-                    $('#sp-leader-test-result').html('Error: ' + error);
-                }
-            });
-        });
-        // AJAX calls for Test API buttons (YouTube, Steam, Facebook, X)
-        $('#sp-test-youtube').on('click', function() {
-            $('#sp-youtube-test-result').html('Testing...');
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'sp_test_youtube_api' },
-                success: function(response) {
-                    $('#sp-youtube-test-result').html(response.message);
-                    if(response.last_fetch_time) {
-                        $('#sp-last-fetch-time').html(response.last_fetch_time);
-                    }
-                    if(response.last_fetch_value) {
-                        $('#sp-last-fetch-value').html(response.last_fetch_value);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#sp-youtube-test-result').html('Error: ' + error);
-                }
-            });
-        });
-        $('#sp-test-steam').on('click', function() {
-            $('#sp-steam-test-result').html('Testing...');
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'sp_test_steam_api' },
-                success: function(response) {
-                    $('#sp-steam-test-result').html(response.message);
-                    if(response.last_fetch_time) {
-                        $('#sp-steam-last-fetch-time').html(response.last_fetch_time);
-                    }
-                    if(response.last_fetch_value) {
-                        $('#sp-steam-last-fetch-value').html(response.last_fetch_value);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#sp-steam-test-result').html('Error: ' + error);
-                }
-            });
-        });
-        $('#sp-test-facebook').on('click', function() {
-            $('#sp-facebook-test-result').html('Testing...');
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'sp_test_facebook_api' },
-                success: function(response) {
-                    $('#sp-facebook-test-result').html(response.message);
-                    if(response.last_fetch_time) {
-                        $('#sp-facebook-last-fetch-time').html(response.last_fetch_time);
-                    }
-                    if(response.last_fetch_value) {
-                        $('#sp-facebook-last-fetch-value').html(response.last_fetch_value);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#sp-facebook-test-result').html('Error: ' + error);
-                }
-            });
-        });
-        $('#sp-test-x').on('click', function() {
-            $('#sp-x-test-result').html('Testing...');
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: { action: 'sp_test_x_api' },
-                success: function(response) {
-                    $('#sp-x-test-result').html(response.message);
-                    if(response.last_fetch_time) {
-                        $('#sp-x-last-fetch-time').html(response.last_fetch_time);
-                    }
-                    if(response.last_fetch_value) {
-                        $('#sp-x-last-fetch-value').html(response.last_fetch_value);
-                    }
-                    if(response.api_limit_count) {
-                        $('#sp-x-api-limit-count').html(response.api_limit_count);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#sp-x-test-result').html('Error: ' + error);
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
 
