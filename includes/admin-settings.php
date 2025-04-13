@@ -136,10 +136,10 @@ function SOCPUL_settings_page_html() {
         <p>
             <strong>Usage of Shortcodes in WordPress:</strong><br />
             In your posts or pages, use the following tags to display the corresponding social media follower counts:<br />
-            - <code>[counter_youtube]</code> for YouTube subscribers<br />
-            - <code>[counter_facebook]</code> for Facebook fans<br />
-            - <code>[counter_x]</code> for X followers<br />
-            - <code>[counter_steam]</code> for Steam in-game player counts
+            - <code>[SOCPUL_counter_youtube]</code> for YouTube subscribers<br />
+            - <code>[SOCPUL_counter_facebook]</code> for Facebook fans<br />
+            - <code>[SOCPUL_counter_x]</code> for X followers<br />
+            - <code>[SOCPUL_counter_steam]</code> for Steam in-game player counts
         </p>
         <form action="options.php" method="post">
             <?php settings_fields('SOCPUL_settings_group'); ?>

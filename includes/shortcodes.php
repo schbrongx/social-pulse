@@ -15,7 +15,7 @@ function SOCPUL_youtube_counter_shortcode() {
         return SOCPUL_youtube_counter_get_value();
     }
 }
-add_shortcode('counter_youtube', 'SOCPUL_youtube_counter_shortcode');
+add_shortcode('SOCPUL_counter_youtube', 'SOCPUL_youtube_counter_shortcode');
 
 function SOCPUL_steam_counter_shortcode() {
     $options = get_option('SOCPUL_options');
@@ -27,7 +27,7 @@ function SOCPUL_steam_counter_shortcode() {
         return SOCPUL_steam_counter_get_value();
     }
 }
-add_shortcode('counter_steam', 'SOCPUL_steam_counter_shortcode');
+add_shortcode('SOCPUL_counter_steam', 'SOCPUL_steam_counter_shortcode');
 
 function SOCPUL_facebook_counter_shortcode() {
     $options = get_option('SOCPUL_options');
@@ -39,7 +39,7 @@ function SOCPUL_facebook_counter_shortcode() {
         return SOCPUL_facebook_counter_get_value();
     }
 }
-add_shortcode('counter_facebook', 'SOCPUL_facebook_counter_shortcode');
+add_shortcode('SOCPUL_counter_facebook', 'SOCPUL_facebook_counter_shortcode');
 
 function SOCPUL_x_counter_shortcode() {
     $options = get_option('SOCPUL_options');
@@ -51,4 +51,4 @@ function SOCPUL_x_counter_shortcode() {
         return SOCPUL_x_counter_get_value();
     }
 }
-add_shortcode('counter_x', 'SOCPUL_x_counter_shortcode');
+add_shortcode('SOCPUL_counter_x', 'SOCPUL_x_counter_shortcode');

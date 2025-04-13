@@ -70,3 +70,14 @@ X Developer Platform, [Generating and Using an App-Only Bearer-Token](https://do
 * Steam:
 [Steam Web API Documentation](https://steamcommunity.com/dev)
 (Find information on obtaining your Steam App ID and using the API.)
+
+## External services
+WordPress guidelines require that the use of external services is clearly statet. Although this is the sole purpose of this plugin I hereby state the following external service usage:
+* Youtube API (https://www.googleapis.com/youtube/v3/channels)
+The Youtube API is used to receive the youtube followers of the account the "Youtube API Key" belongs to.
+* Steam API (https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/)
+The Steam API is used to receive the current players of the Steam app with the "Steam App ID" you enter.
+* Facebook API (https://graph.facebook.com/v22.0/)
+The Facebook API is used to gather fan or follower count of the facbook page with the "Facebook Page ID" you enter.
+* X API (https://api.twitter.com/2/users/by/username/)
+The X API is used to gather the follower count of the account with the "X Username" you enter.
