@@ -717,6 +717,7 @@ function sp_test_x_api_callback() {
           'Content-Type'  => 'application/json',
           'User-Agent'    => 'Mozilla/5.0 (compatible; WordPress/' . get_bloginfo('version') . ')',
         ),
+        'sslverify' => false
     );
 
 	add_filter('https_ssl_verify', '__return_false');
