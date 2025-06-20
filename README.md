@@ -16,7 +16,7 @@ Social Pulse retrieves follower numbers from multiple platforms and displays the
 * [Screenshot Follower-Mode](assets/screenshot-follower-mode.png)
 
 ## Try it out!
-* Download the [ZIP](https://github.com/schbrongx/social-pulse/releases/download/v1.0/social-pulse.zip)
+* Download the [ZIP](https://github.com/schbrongx/social-pulse/releases/download/v1.1.3/social-pulse-v1.1.3.zip)
 * Navigate to the [Wordpress Playground](https://playground.wordpress.net/)
 * Go to the "Plugins" page
 * Click "Add New Plugin"
