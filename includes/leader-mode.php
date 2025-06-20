@@ -47,10 +47,20 @@ function SOCPUL_youtube_counter_get_value() {
             'key'  => $api_key
         ), 'https://www.googleapis.com/youtube/v3/channels' );
         $response = wp_remote_get($api_url);
-        if ( is_wp_error($response) ) return 0;
+        if ( is_wp_error( $response ) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['last_fetch_value'])
+                ? number_format_i18n( intval( $opts['last_fetch_value'] ) )
+                : 0;
+        }
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body,true);
-        if ( ! isset($data['items'][0]['statistics']['subscriberCount']) ) return 0;
+        if ( ! isset($data['items'][0]['statistics']['subscriberCount']) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['last_fetch_value'])
+            ? number_format_i18n( intval( $opts['last_fetch_value'] ) )
+            : 0;
+        }
         $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
         $refresh_hours = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
         set_transient($transient_key, $subscriberCount, $refresh_hours * 3600);
@@ -67,10 +77,20 @@ function SOCPUL_steam_counter_get_value() {
         if ( empty($app_id) ) return 0;
         $api_url = add_query_arg( array( 'appid' => $app_id ), 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/' );
         $response = wp_remote_get($api_url);
-        if ( is_wp_error($response) ) return 0;
+        if ( is_wp_error( $response ) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['steam_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['steam_last_fetch_value'] ) )
+            : 0;
+        }
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body,true);
-        if ( ! isset($data['response']['player_count']) ) return 0;
+        if ( ! isset($data['response']['player_count']) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['steam_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['steam_last_fetch_value'] ) )
+            : 0;
+        }
         $playerCount = $data['response']['player_count'];
         $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
         set_transient($transient_key, $playerCount, $refresh_hours * 3600);
@@ -90,10 +110,20 @@ function SOCPUL_facebook_counter_get_value() {
         $field = ($metric === 'follower') ? 'followers_count' : 'fan_count';
         $api_url = 'https://graph.facebook.com/v22.0/' . $page_id . '?fields=' . $field . '&access_token=' . $access_token;
         $response = wp_remote_get($api_url);
-        if ( is_wp_error($response) ) return 0;
+        if ( is_wp_error( $response ) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['facebook_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['facebook_last_fetch_value'] ) )
+            : 0;
+        }
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body,true);
-        if ( ! isset($data[$field]) ) return 0;
+        if ( ! isset($data[$field]) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['facebook_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['facebook_last_fetch_value'] ) )
+            : 0;
+        }
         $value = $data[$field];
         $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
         set_transient($transient_key, $value, $refresh_hours * 3600);
@@ -108,7 +138,7 @@ function SOCPUL_x_counter_get_value() {
     if ( false === $followers_count ) {
         $username = isset($options['x_username']) ? urldecode(trim($options['x_username'])) : '';
         $bearer_token = isset($options['x_bearer_token']) ? trim($options['x_bearer_token']) : '';
-        
+
         # if username or bearer token are missing return 0
         if ( empty($username) || empty($bearer_token) ) return 0;
 
@@ -131,12 +161,22 @@ function SOCPUL_x_counter_get_value() {
         SOCPUL_increment_x_request_count();
         $response = wp_remote_get($api_url, $args);
 
-        if ( is_wp_error($response) ) return 0;
+        if ( is_wp_error( $response ) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['x_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['x_last_fetch_value'] ) )
+            : 0;
+        }
 
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body);
 
-        if ( ! isset($data->data->public_metrics->followers_count) ) return 0;
+        if ( ! isset($data->data->public_metrics->followers_count) ) {
+            $opts = get_option('SOCPUL_options');
+            return isset($opts['x_last_fetch_value'])
+            ? number_format_i18n( intval( $opts['x_last_fetch_value'] ) )
+            : 0;
+        }
 
         $followers_count = $data->data->public_metrics->followers_count;
         $refresh_hours = isset($options['x_refresh_interval']) ? intval($options['x_refresh_interval']) : 12;
