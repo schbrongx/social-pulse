@@ -64,6 +64,10 @@ function SOCPUL_youtube_counter_get_value() {
         $subscriberCount = $data['items'][0]['statistics']['subscriberCount'];
         $refresh_hours = isset($options['youtube_refresh_interval']) ? intval($options['youtube_refresh_interval']) : 12;
         set_transient($transient_key, $subscriberCount, $refresh_hours * 3600);
+        $options = get_option('SOCPUL_options');
+        $options['last_fetch_time']  = current_time('mysql');
+        $options['last_fetch_value'] = intval($subscriberCount);
+        update_option('SOCPUL_options', $options);
     }
     return number_format_i18n($subscriberCount);
 }
@@ -93,7 +97,11 @@ function SOCPUL_steam_counter_get_value() {
         }
         $playerCount = $data['response']['player_count'];
         $refresh_hours = isset($options['steam_refresh_interval']) ? intval($options['steam_refresh_interval']) : 12;
+        $options = get_option('SOCPUL_options');
+        $options['steam_last_fetch_time']  = current_time('mysql');
+        $options['steam_last_fetch_value'] = intval($subscriberCount);
         set_transient($transient_key, $playerCount, $refresh_hours * 3600);
+        update_option('SOCPUL_options', $options);
     }
     return number_format_i18n($playerCount);
 }
@@ -126,7 +134,11 @@ function SOCPUL_facebook_counter_get_value() {
         }
         $value = $data[$field];
         $refresh_hours = isset($options['facebook_refresh_interval']) ? intval($options['facebook_refresh_interval']) : 12;
+        $options = get_option('SOCPUL_options');
+        $options['facebook_last_fetch_time']  = current_time('mysql');
+        $options['facebook_last_fetch_value'] = intval($subscriberCount);
         set_transient($transient_key, $value, $refresh_hours * 3600);
+        update_option('SOCPUL_options', $options);
     }
     return number_format_i18n($value);
 }
