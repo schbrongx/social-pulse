@@ -2,8 +2,8 @@
 Contributors: schbrongx
 Tags: social, followers, api, counters
 Requires at least: 5.0
-Tested up to: 6.8.1
-Stable tag: 1.1.3
+Tested up to: 6.8.2
+Stable tag: 1.1.4
 License: MIT
 License URI: https://mit-license.org/
 

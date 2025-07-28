@@ -3,7 +3,7 @@
 Plugin Name: Social Pulse
 Plugin URI: https://thomaspesendorfer.ch/social-pulse
 Description: Shows follower-numbers of social accounts (i.e. YouTube, X, Facebook, Steam).
-Version: 1.1.2
+Version: 1.1.4
 Author: Schbrongx
 Author URI: https://thomaspesendorfer.ch
 License: MIT
